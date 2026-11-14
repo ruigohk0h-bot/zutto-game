@@ -179,6 +179,14 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;line-height
 .r-hero{display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center}
 .r-hero h2{font-size:21px}
 .nw{display:inline-block;max-width:100%;overflow-wrap:anywhere}
+.rv4{display:flex;justify-content:center;gap:6px}
+.rv4 li{font:500 10.5px/24px var(--f-cap);letter-spacing:.12em;padding:0 10px;border-radius:4px;background:var(--track);color:var(--ink3)}
+.rv4 li.on{background:var(--ink);color:#fff}
+@keyframes zgPhoto{from{opacity:0;transform:scale(1.05);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+@keyframes zgUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#s-result.enter .r-hero>.cap,#s-result.enter .r-hero>h2{animation:zgUp .7s ease both}
+#s-result.enter .r-photo{animation:zgPhoto 1.3s .25s ease both}
+#s-result.enter #rNote,#s-result.enter #rTabs,#s-result.enter .cert{animation:zgUp .8s 1.1s ease both}
 .r-photo{width:100%;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 30px 50px -34px rgba(30,45,69,.5)}
 .r-photo img{width:100%;aspect-ratio:1;object-fit:cover}
 .r-photo figcaption{font-size:13px;padding:10px 12px;color:var(--ink);box-shadow:inset 0 1px 0 var(--line)}
@@ -946,6 +954,111 @@ const cutStage = {
       text: 'カットの精度が、ダイヤモンドの輝きを決めます。次は、このダイヤモンドを仕立てるジュエリーを選びます。', button: 'デザインを選ぶ' };
   },
 };
+/* ---------- デザイン決定のあと：職人がジュエリーに仕立てる演出（操作なし） ---------- */
+const METAL_RGB = { white: [[238, 240, 243], [148, 154, 163]], yellow: [[246, 228, 172], [176, 140, 72]], pink: [[247, 216, 206], [190, 132, 118]] };
+function drawHand(g, x, y, ang, k, tool, mirror) {
+  g.save(); g.translate(x, y); g.rotate(ang); g.scale(k, mirror ? -k : k); g.lineCap = 'round';
+  g.save(); g.globalAlpha = .3; g.fillStyle = '#000'; g.translate(7, 12); g.beginPath(); g.ellipse(92, 6, 40, 31, 0, 0, 7); g.fill(); rr(g, 116, -30, 520, 62, 22); g.fill(); g.restore();
+  const sl = g.createLinearGradient(0, -30, 0, 32); sl.addColorStop(0, '#34435d'); sl.addColorStop(1, '#1d283c'); g.fillStyle = sl; rr(g, 116, -30, 520, 62, 22); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(126, -29, 4, 60);
+  if (tool === 'tweezers') { g.strokeStyle = '#cfd4db'; g.lineWidth = 3.2; [-1, 1].forEach(s => { g.beginPath(); g.moveTo(-1, s * 15); g.quadraticCurveTo(50, s * 10, 124, s * 2); g.stroke(); }); }
+  else if (tool === 'pusher') { g.fillStyle = '#cfd4db'; g.fillRect(0, -2.2, 62, 4.4); g.fillStyle = '#8f5d33'; rr(g, 56, -8, 66, 16, 8); g.fill(); }
+  else if (tool === 'buff') { g.fillStyle = '#8f5d33'; rr(g, 14, -4.5, 108, 9, 4); g.fill(); g.fillStyle = '#f1e8d2'; g.beginPath(); g.ellipse(6, 0, 15, 10, 0, 0, 7); g.fill(); g.strokeStyle = 'rgba(0,0,0,.14)'; g.lineWidth = 1; g.stroke(); }
+  else if (tool === 'loupe') { g.fillStyle = '#3b424c'; rr(g, 40, -5, 84, 10, 5); g.fill(); g.strokeStyle = '#b9bfc8'; g.lineWidth = 5; g.beginPath(); g.arc(0, 0, 42, 0, 7); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1.2; g.beginPath(); g.arc(0, 0, 38.5, 3.5, 5.1); g.stroke(); }
+  const sk = g.createRadialGradient(80, -8, 4, 92, 6, 44); sk.addColorStop(0, '#e8c6a4'); sk.addColorStop(1, '#b48662'); g.fillStyle = sk; g.beginPath(); g.ellipse(92, 6, 38, 29, 0, 0, 7); g.fill();
+  for (let i = 0; i < 4; i++) { const fg = g.createLinearGradient(0, -17, 0, 15); fg.addColorStop(0, '#eccdae'); fg.addColorStop(1, '#c2946f'); g.fillStyle = fg; rr(g, 62 + i * 13, -17, 11.5, 32, 5.7); g.fill(); g.strokeStyle = 'rgba(120,80,50,.35)'; g.lineWidth = .8; g.stroke(); }
+  g.save(); g.translate(72, 21); g.rotate(-.25); g.fillStyle = '#d9b08b'; g.beginPath(); g.ellipse(0, 0, 17, 8.5, 0, 0, 7); g.fill(); g.strokeStyle = 'rgba(120,80,50,.3)'; g.lineWidth = .8; g.stroke(); g.restore();
+  g.restore();
+}
+const revealStage = {
+  step: 7, title: '仕立て・鑑定', time: 0, dur: 10,
+  setup() {
+    const d = state.design;
+    this.t = 0; this.bg = null;
+    this.metal = d.kind === 'std' ? state.metal : d.kind === 'full' ? (full.metal === 'Pt900' ? 'white' : full.color) : 'white';
+    info.innerHTML = `<p class="hint" id="rvNote"></p><ol class="rv4" id="rv4">${['CARAT', 'COLOR', 'CLARITY', 'CUT'].map(k => `<li>${k}</li>`).join('')}</ol>`;
+    ctl.innerHTML = `<button class="btn ghost" id="rvSkip" type="button">とばす</button>`;
+    $('#rvSkip').addEventListener('click', finishReveal);
+  },
+  resize() { this.bg = null; },
+  buildBg() {
+    const c = document.createElement('canvas'); c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+    const f = c.getContext('2d'), r = rng(33); f.scale(dpr, dpr);
+    const wd = f.createLinearGradient(0, 0, W, H); wd.addColorStop(0, '#7a5433'); wd.addColorStop(1, '#4d311c'); f.fillStyle = wd; f.fillRect(0, 0, W, H);
+    for (let i = 0; i < 70; i++) { const y = r() * H, a = r() * .1 + .03; f.strokeStyle = r() < .5 ? `rgba(0,0,0,${a})` : `rgba(255,235,200,${a * .6})`; f.lineWidth = .6 + r() * 1.4;
+      f.beginPath(); f.moveTo(0, y); f.bezierCurveTo(W * .3, y + (r() - .5) * 14, W * .7, y + (r() - .5) * 14, W, y + (r() - .5) * 10); f.stroke(); }
+    const mx = W * .07, my = H * .09, mw = W * .86, mh = H * .68;
+    f.fillStyle = 'rgba(0,0,0,.35)'; rr(f, mx + 3, my + 5, mw, mh, 10); f.fill();
+    const mt = f.createLinearGradient(0, my, 0, my + mh); mt.addColorStop(0, '#34443d'); mt.addColorStop(1, '#232e2a'); f.fillStyle = mt; rr(f, mx, my, mw, mh, 10); f.fill();
+    f.setLineDash([4, 4]); f.strokeStyle = 'rgba(255,255,255,.13)'; f.lineWidth = 1; rr(f, mx + 7, my + 7, mw - 14, mh - 14, 6); f.stroke(); f.setLineDash([]);
+    const dx = mx + mw * .17, dy = my + mh * .14, dr = Math.min(W, H) * .06;
+    f.fillStyle = 'rgba(0,0,0,.3)'; f.beginPath(); f.arc(dx + 2, dy + 3, dr, 0, 7); f.fill();
+    const dg = f.createRadialGradient(dx - dr * .3, dy - dr * .3, 2, dx, dy, dr); dg.addColorStop(0, '#f4efe4'); dg.addColorStop(1, '#cfc7b6'); f.fillStyle = dg; f.beginPath(); f.arc(dx, dy, dr, 0, 7); f.fill();
+    f.strokeStyle = 'rgba(0,0,0,.12)'; f.beginPath(); f.arc(dx, dy, dr * .72, 0, 7); f.stroke();
+    for (let i = 0; i < 4; i++) { f.fillStyle = '#fff'; f.beginPath(); f.arc(dx + (r() - .5) * dr * .8, dy + (r() - .5) * dr * .8, 1.6, 0, 7); f.fill(); }
+    f.save(); f.translate(mx + mw * .6, my + mh * .09); f.rotate(.16); f.fillStyle = 'rgba(0,0,0,.3)'; rr(f, 2, 4, W * .27, 7, 3); f.fill(); f.fillStyle = '#c5cad2'; f.fillRect(0, 1.5, W * .15, 3); f.fillStyle = '#93602f'; rr(f, W * .14, -2, W * .12, 10, 5); f.fill(); f.restore();
+    const lg = f.createRadialGradient(W * .35, H * .3, 10, W * .45, H * .4, Math.max(W, H) * .78); lg.addColorStop(0, 'rgba(255,225,170,.22)'); lg.addColorStop(.6, 'rgba(0,0,0,0)'); lg.addColorStop(1, 'rgba(0,0,0,.55)'); f.fillStyle = lg; f.fillRect(0, 0, W, H);
+    this.bg = c;
+  },
+  piece(g, cx, cy, R, seated, pr, tt) {
+    const [hi, lo] = METAL_RGB[this.metal] || METAL_RGB.white;
+    const mg = g.createLinearGradient(cx - R * 1.4, cy - R * 1.4, cx + R * 1.4, cy + R * 1.4); mg.addColorStop(0, `rgb(${hi})`); mg.addColorStop(.45, `rgb(${lo})`); mg.addColorStop(.62, `rgb(${hi})`); mg.addColorStop(1, `rgb(${lo})`);
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.ellipse(cx + 3, cy + R * .2, R * 1.4, R * 1.36, 0, 0, 7); g.fill();
+    g.beginPath(); g.arc(cx, cy, R * 1.34, 0, 7); g.fillStyle = mg; g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 1; g.stroke();
+    g.beginPath(); g.arc(cx, cy, R * 1.04, 0, 7); g.fillStyle = '#0c1016'; g.fill();
+    if (seated) { drawBrilliant(g, cx, cy, R, tt, 1); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.stroke(); }
+    for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2, rad = lerp(R * 1.5, R * .96, pr[i]);
+      g.save(); g.translate(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad); g.rotate(a);
+      g.fillStyle = `rgb(${hi})`; rr(g, 0, -R * .12, R * .44, R * .24, R * .12); g.fill(); g.fillStyle = `rgba(${lo},.65)`; rr(g, 0, R * .01, R * .44, R * .11, R * .055); g.fill(); g.restore(); }
+  },
+  update(dt) {
+    this.t += dt; const t = this.t;
+    $('#rvNote').textContent = t < 2.6 ? '職人が、ダイヤモンドを台座にのせています' : t < 5.4 ? '爪を一本ずつ倒して、しっかり留めています' : t < 7.4 ? '仕上げに、全体を磨き上げています' : t < 9.4 ? 'ルーペで、仕上がりと4Cを確認しています' : '完成しました';
+    const on = Math.floor((t - 7.9) / .35) + 1; [...$('#rv4').children].forEach((li, i) => li.classList.toggle('on', i < on));
+    if (t >= this.dur) finishReveal();
+  },
+  draw(g, W, H, tt) {
+    if (!this.bg) this.buildBg(); g.drawImage(this.bg, 0, 0, W, H);
+    const t = this.t, cx = W / 2, cy = H * .42, R = Math.min(W, H) * .075, k = R / 14, ease = u => 1 - Math.pow(1 - clamp(u), 3);
+    const mixP = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u)];
+    [-1, 1].forEach(sd => { const x = sd < 0 ? cx - R * 4.3 : cx + R * 1.38, y = cy - R * 1.15;
+      g.fillStyle = 'rgba(0,0,0,.35)'; rr(g, x + 2, y + 4, R * 2.92, R * 2.3, R * .3); g.fill();
+      const jg = g.createLinearGradient(0, y, 0, y + R * 2.3); jg.addColorStop(0, '#8f6642'); jg.addColorStop(1, '#5e4028'); g.fillStyle = jg; rr(g, x, y, R * 2.92, R * 2.3, R * .3); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.18)'; rr(g, x + 3, y + 3, R * 2.92 - 6, 3, 1.5); g.fill(); });
+    const seated = t >= 1.9, pr = [0, 1, 2, 3].map(i => clamp((t - (2.6 + i * .7 + .25)) / .3));
+    this.piece(g, cx, cy, R, seated, pr, tt);
+    if (t > 5.4 && t < 7.4) { const v = ((t - 5.4) / 1) % 1; g.save(); g.beginPath(); g.arc(cx, cy, R * 1.36, 0, 7); g.clip(); g.translate(cx, cy); g.rotate(-.5); g.globalCompositeOperation = 'lighter';
+      const x = -R * 2 + v * R * 4, sg = g.createLinearGradient(x - R * .5, 0, x + R * .5, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.6)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = sg; g.fillRect(-R * 2, -R * 2, R * 4, R * 4); g.restore(); }
+    for (let i = 0; i < 4; i++) { const u = (t - (2.6 + i * .7 + .5)) / .35; if (u < 0 || u > 1) continue; const a = Math.PI / 4 + i * Math.PI / 2, s = Math.sin(u * Math.PI) * R * .5;
+      g.save(); g.translate(cx + Math.cos(a) * R * 1.1, cy + Math.sin(a) * R * 1.1); g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-s, 0); g.lineTo(s, 0); g.moveTo(0, -s); g.lineTo(0, s); g.stroke(); g.restore(); }
+    drawHand(g, cx - R * .1, cy - R * 3.2, Math.PI - .8, k, 'none', true);
+    const P = [cx, cy], S = [cx + W * .42, cy + H * .36], Q = [cx + R * 3.2, cy + R * 2.6], ang = .78;
+    const prong = (i, rad) => { const a = Math.PI / 4 + i * Math.PI / 2; return [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]; };
+    const buffAt = u => [cx + Math.sin(u * 6) * R * 1.2, cy + R * .1 + Math.cos(u * 2.4) * R * .5];
+    let tip, tool;
+    if (t < 2.6) { tool = 'tweezers'; tip = t < 2 ? mixP(S, P, ease(t / 1.7)) : mixP(P, Q, ease((t - 2) / .6)); }
+    else if (t < 5.4) { tool = 'pusher'; const sg = (t - 2.6) / .7, i = Math.min(3, Math.floor(sg)), f = sg - i, prev = i ? prong(i - 1, R * 1.42) : Q, O = prong(i, R * 1.8), I = prong(i, R * 1.42);
+      tip = f < .36 ? mixP(prev, O, ease(f / .36)) : f < .79 ? mixP(O, I, (f - .36) / .43) : I; }
+    else if (t < 7.4) { tool = 'buff'; tip = mixP(prong(3, R * 1.42), buffAt(t - 5.4), ease((t - 5.4) / .4)); }
+    else { tool = 'loupe'; tip = mixP(buffAt(2), [cx + Math.sin(t * 1.3) * R * .25, cy + Math.cos(t * 1.1) * R * .2], ease((t - 7.4) / .6)); }
+    if (tool === 'tweezers' && !seated) { g.save(); g.translate(tip[0], tip[1]); drawBrilliant(g, 0, 0, R, tt, 1); g.beginPath(); g.arc(0, 0, R, 0, 7); g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.stroke(); g.restore(); }
+    if (tool === 'loupe') { const lr = R * 3; g.save(); g.beginPath(); g.arc(tip[0], tip[1], lr, 0, 7); g.clip(); g.fillStyle = '#1c2622'; g.fillRect(tip[0] - lr, tip[1] - lr, lr * 2, lr * 2);
+      g.translate(tip[0], tip[1]); g.scale(2.5, 2.5); g.translate(-tip[0], -tip[1]); this.piece(g, cx, cy, R, true, [1, 1, 1, 1], tt);
+      g.restore(); g.save(); g.beginPath(); g.arc(tip[0], tip[1], lr, 0, 7); g.clip(); const gl = g.createLinearGradient(tip[0] - lr, tip[1] - lr, tip[0] + lr, tip[1] + lr); gl.addColorStop(0, 'rgba(255,255,255,.22)'); gl.addColorStop(.4, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.fillRect(tip[0] - lr, tip[1] - lr, lr * 2, lr * 2); g.restore(); }
+    drawHand(g, tip[0], tip[1], ang, k, tool, false);
+    if (t > 9.4) { g.fillStyle = `rgba(243,241,236,${clamp((t - 9.4) / .6)})`; g.fillRect(0, 0, W, H); }
+  },
+};
+function startReveal() {
+  cur = revealStage; show('s-stage'); setHud(6, false);
+  $('#stCap').textContent = 'STEP 7'; $('#stTitle').textContent = cur.title; ov.hidden = true; info.innerHTML = ''; ctl.innerHTML = '';
+  cur.setup(); running = true; requestAnimationFrame(resizeCanvas);
+}
+function finishReveal() {
+  if (cur !== revealStage || !running) return; running = false; openResult();
+  const r = $('#s-result'); r.classList.add('enter'); setTimeout(() => r.classList.remove('enter'), 2800);
+}
 const STAGES = [harvestStage, extractStage, seedStage, cvdStage, cutStage];
 
 /* ============================================================
@@ -1032,7 +1145,7 @@ function selectStd(id) { const s = STD.find(x => x[0] === id); state.design = { 
 function markCards(p, b) { p.querySelectorAll('.card').forEach(c => c.setAttribute('aria-pressed', c === b)); updateSel(); }
 function updateSel() { const d = state.design; $('#dSel').textContent = d ? `選択中：${d.name}${d.code ? '（' + d.code + '）' : ''}` : 'デザインを1つ選んでください'; $('#dGo').disabled = !d; }
 $('#dTabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (!b) return; dTab = b.dataset.t; if (dTab !== 'full' && state.design && state.design.kind === 'full') state.design = null; renderDesign(); });
-$('#dGo').addEventListener('click', () => { if (state.design) openResult(); });
+$('#dGo').addEventListener('click', () => { if (!state.design) return; if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) openResult(); else startReveal(); });
 
 /* ============================================================
    結果：鑑定書＋個体分析書
