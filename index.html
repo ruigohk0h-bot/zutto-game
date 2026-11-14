@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<style>html{color-scheme:light}body{margin:0;font-size:14px}[hidden]{display:none!important}</style>
+<title>ZUTTOダイヤモンドができるまで</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap">
+<style>
+/* レイアウト方針：スマホ縦1画面のアプリ。上に進行表示、中央に工程の映像、下に操作。
+   紙面はアイボリー、文字はロゴと同じ紺、区切りは金の細線。工程の映像だけ暗いラボの色にする。 */
+:root{
+  --bg:#F3F1EC; --paper:#FCFBF8; --ink:#1E2D45; --ink2:#5B6779; --ink3:#8A93A1;
+  --line:rgba(30,45,69,.14); --gold:#A4874B; --gold2:#D8C596; --goldbg:#F3ECDB;
+  --lab:#0B121C; --ok:#2E7A5A; --warn:#B5502A; --track:#E4E0D6;
+  --f-disp:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;
+  --f-cap:"Cinzel","Shippori Mincho",serif;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-text-size-adjust:100%;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+button,a,input,label,summary{touch-action:manipulation}
+button{font-family:inherit;color:inherit}
+img{max-width:100%;display:block}
+h1,h2,h3,p,ol,ul,dl,dd,figure{margin:0;padding:0}
+ol,ul{list-style:none}
+h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;line-height:1.45}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+#app{height:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;padding-block:10px;gap:8px}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cap{font-family:var(--f-cap);font-size:11px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+.fine{font-size:12px;color:var(--ink3);line-height:1.6}
+
+.btn{appearance:none;border:0;border-radius:8px;background:var(--ink);color:#fff;font:500 16px/1.3 var(--f-body);
+  padding:14px 18px;min-height:52px;width:100%;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.btn:disabled{background:#C9CCD2;cursor:default}
+.btn.gold{background:linear-gradient(#B2955A,#977A41)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(30,45,69,.3)}
+.btn.hold.on{background:linear-gradient(#D9793A,#B5502A)}
+
+/* ---- 進行表示 ---- */
+#hud{display:flex;align-items:center;gap:10px;min-height:34px}
+.hud-logo{height:22px;width:auto}
+.hud-step{flex:1;min-width:0;display:flex;align-items:center;gap:8px;justify-content:center}
+.dots{display:flex;gap:5px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--track)}
+.dots i.done{background:var(--gold2)}
+.dots i.now{background:var(--gold);box-shadow:0 0 0 3px var(--goldbg)}
+.timer{font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink2);min-width:58px;text-align:right}
+.timer b{font:600 20px var(--f-disp);color:var(--ink)}
+.tbar{height:2px;background:var(--track);border-radius:1px;overflow:hidden}
+.tbar i{display:block;height:100%;width:100%;background:var(--gold);transform-origin:left}
+
+/* ---- タイトル ---- */
+.title-wrap{margin:auto 0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding-block:8px}
+.t-logo{width:210px}
+.t-photo{position:relative;width:176px;height:220px;flex:none;border-radius:88px 88px 4px 4px;overflow:hidden;
+  box-shadow:0 0 0 5px var(--bg),0 0 0 6px var(--gold2)}
+.t-photo img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
+.title-wrap h1{font-size:26px}
+.hair{width:min(300px,84%);height:22px}
+.lead{color:var(--ink2);max-width:22em}
+.flow{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 6px;font-size:12px;color:var(--ink2)}
+.flow li+li::before{content:"›";margin-right:6px;color:var(--gold)}
+
+/* ---- ペット情報 ---- */
+.form{margin:auto 0;display:flex;flex-direction:column;gap:18px;padding-block:8px}
+.form h2{font-size:22px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>label,.field>.lab{font-size:13px;color:var(--ink2)}
+.inp{appearance:none;border:0;border-radius:8px;background:var(--paper);box-shadow:inset 0 0 0 1px rgba(30,45,69,.28);
+  font:500 17px var(--f-body);color:var(--ink);padding:12px 14px;width:100%}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seg.c3{grid-template-columns:repeat(3,1fr)}
+.seg.c2{grid-template-columns:repeat(2,1fr)}
+.opt{appearance:none;border:0;border-radius:8px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);
+  font:500 14px/1.3 var(--f-body);padding:11px 4px;min-height:44px;cursor:pointer}
+.opt[aria-pressed="true"]{background:var(--ink);color:#fff;box-shadow:none}
+.opt:disabled{opacity:.35;cursor:default}
+.hintbox{font-size:13px;color:var(--ink2);background:var(--goldbg);border-radius:6px;padding:10px 12px;line-height:1.6}
+
+/* ---- 工程 ---- */
+.stage-head{display:flex;align-items:baseline;gap:10px}
+.stage-head h2{font-size:20px}
+.stage-body{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.cvwrap{position:relative;flex:1;min-height:150px;border-radius:10px;overflow:hidden;background:var(--lab)}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.info{display:flex;flex-direction:column;gap:8px}
+.info:empty,.ctl:empty{display:none}
+.hint{font-size:13px;color:var(--ink2);text-align:center}
+.track{position:relative;flex:1;height:14px;border-radius:7px;background:var(--track);box-shadow:inset 0 0 0 1px var(--line)}
+.track.tall{height:22px;border-radius:6px}
+.zone{position:absolute;top:0;bottom:0;background:linear-gradient(#E6D29C,#C6A862);border-radius:3px}
+.zone.good{background:#EDE3C6}
+.fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:7px;background:linear-gradient(#C9AE6C,#A4874B)}
+.mark{position:absolute;top:-5px;bottom:-5px;left:0;width:6px;margin-left:-3px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 2px var(--paper)}
+.mark.out{background:var(--warn)}
+.mrow{display:flex;align-items:center;gap:10px}
+.ml{font-size:13px;color:var(--ink2);width:3.2em}
+.chip{font-size:12px;border-radius:999px;padding:2px 10px;background:var(--track);color:var(--ink2);min-width:4.4em;text-align:center}
+.chip.ok{background:#DDEBE3;color:var(--ok)}
+.chip.ng{background:#F3DDD3;color:var(--warn)}
+.stat{display:flex;align-items:baseline;justify-content:center;gap:8px;font-size:13px;color:var(--ink2)}
+.stat b{font:600 28px/1 var(--f-disp);color:var(--ink);font-variant-numeric:tabular-nums;min-width:1.6em;text-align:right}
+.hand-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.hand-num b{font:600 26px/1 var(--f-disp);color:var(--ink);font-variant-numeric:tabular-nums}
+.prow{display:flex;align-items:center;gap:8px}
+.pl{width:4.6em;font-size:13px;line-height:1.25}
+.pl small{display:block;font-size:10.5px;color:var(--ink3)}
+.pm{appearance:none;border:0;width:46px;height:42px;border-radius:8px;background:var(--paper);box-shadow:inset 0 0 0 1px rgba(30,45,69,.3);
+  font:500 22px/1 var(--f-body);cursor:pointer;user-select:none;-webkit-user-select:none}
+.pm:active{background:var(--goldbg)}
+.facets{display:flex;justify-content:center;gap:6px}
+.facets li{width:34px;height:22px;border-radius:4px;background:var(--track);font:500 10px/22px var(--f-cap);text-align:center;color:var(--ink2)}
+.facets li.perfect{background:var(--gold);color:#fff}
+.facets li.good{background:var(--gold2);color:var(--ink)}
+.facets li.miss{background:#D9DADD}
+
+.overlay{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
+  background:rgba(243,241,236,.84);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);border-radius:10px}
+.ov-card{width:100%;max-height:100%;overflow:auto;background:var(--paper);border-radius:10px;padding:22px 20px;
+  box-shadow:0 0 0 1px var(--line),0 22px 44px -22px rgba(30,45,69,.4);display:flex;flex-direction:column;gap:12px}
+.ov-card h3{font-size:21px}
+.ov-card p{color:var(--ink2)}
+.how{background:var(--goldbg);border-radius:6px;padding:10px 12px;font-size:14px;color:var(--ink)!important;line-height:1.6}
+.how b{font-weight:500;color:var(--gold);font-size:12px;display:block;letter-spacing:.08em}
+.ov-stat{font:600 30px/1.2 var(--f-disp);color:var(--ink)!important;font-variant-numeric:tabular-nums}
+.ov-stat small{font:500 13px var(--f-body);color:var(--ink2);margin-right:8px}
+
+/* ---- デザイン選択 ---- */
+.d-head{display:flex;gap:14px;align-items:center}
+.d-stone{width:76px;height:76px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px var(--bg),0 0 0 4px var(--gold2);flex:none}
+.d-head h2{font-size:19px}
+.d-head p{color:var(--ink2);font-size:14px}
+.d-head p b{font:600 22px var(--f-disp);color:var(--ink)}
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;background:var(--track);border-radius:8px;padding:3px}
+.tab{appearance:none;border:0;background:transparent;border-radius:6px;font:500 13.5px/1.3 var(--f-body);padding:9px 4px;min-height:40px;cursor:pointer;color:var(--ink2)}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(30,45,69,.15)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.fchip{appearance:none;border:0;white-space:nowrap;border-radius:999px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);font:500 13px var(--f-body);padding:7px 13px;cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--ink);color:#fff;box-shadow:none}
+.sw{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink2)}
+.swb{appearance:none;border:0;display:flex;align-items:center;gap:6px;border-radius:999px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);font:500 13px var(--f-body);padding:6px 12px 6px 7px;cursor:pointer}
+.swb i{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.swb[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{appearance:none;border:0;text-align:left;background:#fff;border-radius:8px;padding:0 0 9px;overflow:hidden;cursor:pointer;
+  box-shadow:0 0 0 1px var(--line);display:flex;flex-direction:column;gap:2px;min-width:0}
+.card img{width:100%;aspect-ratio:1;object-fit:cover;background:#fff}
+.card .cn{font-size:13px;line-height:1.4;padding:6px 9px 0}
+.card .cc{font:400 10.5px var(--f-cap);letter-spacing:.08em;color:var(--ink3);padding:0 9px}
+.card[aria-pressed="true"]{box-shadow:0 0 0 2px var(--gold),0 10px 20px -12px rgba(164,135,75,.8)}
+.sub{font-size:12px;color:var(--gold);letter-spacing:.06em;grid-column:1/-1;margin-top:6px}
+.fo{display:flex;flex-direction:column;gap:14px}
+.fo-prev{display:flex;gap:12px;align-items:center;background:#fff;border-radius:8px;box-shadow:0 0 0 1px var(--line);padding:8px}
+.fo-prev img{width:96px;height:96px;object-fit:cover;border-radius:4px;flex:none}
+.fo-prev p{font-size:12.5px;color:var(--ink2);line-height:1.55}
+.d-foot{position:sticky;bottom:0;margin-top:auto;padding-top:22px;padding-bottom:2px;
+  background:linear-gradient(rgba(243,241,236,0),var(--bg) 34%);display:flex;flex-direction:column;gap:6px}
+.d-sel{font-size:13px;color:var(--ink2);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---- 結果 ---- */
+.r-hero{display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center}
+.r-hero h2{font-size:21px}
+.nw{display:inline-block;max-width:100%}
+.r-photo{width:100%;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 30px 50px -34px rgba(30,45,69,.5)}
+.r-photo img{width:100%;aspect-ratio:1;object-fit:cover}
+.r-photo figcaption{font-size:13px;padding:10px 12px;color:var(--ink);box-shadow:inset 0 1px 0 var(--line)}
+.r-photo figcaption span{font:400 11px var(--f-cap);letter-spacing:.08em;color:var(--ink3);margin-left:8px}
+.cert{background:var(--paper);padding:6px;border-radius:3px;box-shadow:0 0 0 1px var(--gold2),0 24px 44px -30px rgba(30,45,69,.5)}
+.cert-in{box-shadow:inset 0 0 0 1px var(--gold2);padding:22px 16px 18px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.cert-logo{width:170px}
+.cert h3{font-size:21px}
+.cert h3 small{display:block;font:500 12px var(--f-body);color:var(--ink2);letter-spacing:.2em;margin-top:2px}
+.cert-pet b{display:block;font:600 26px/1.3 var(--f-disp);overflow-wrap:anywhere}
+.cert-pet span{font-size:12.5px;color:var(--ink2)}
+.cert-main{display:grid;grid-template-columns:42% 1fr;gap:14px;width:100%;align-items:center;text-align:left}
+.cert-ph{width:100%;aspect-ratio:1;object-fit:cover;background:#fff;box-shadow:0 0 0 1px var(--line)}
+.c4{display:flex;flex-direction:column}
+.c4 div{padding:5px 0;box-shadow:inset 0 -1px 0 var(--line)}
+.c4 dt{font:500 10px var(--f-cap);letter-spacing:.2em;color:var(--gold)}
+.c4 dd{font:600 21px/1.25 var(--f-disp)}
+.c4 dd small{font:500 12px var(--f-body);color:var(--ink2);margin-left:3px}
+.rows{width:100%;text-align:left}
+.rows div{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:8px 0;box-shadow:inset 0 -1px 0 var(--line);font-size:13.5px}
+.rows dt{color:var(--ink2);white-space:nowrap}
+.rows dd{text-align:right;min-width:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.rank{font:600 24px/1 var(--f-disp);color:var(--gold)}
+.cert-msg{font:500 15px/1.8 var(--f-disp);text-align:left;width:100%}
+.cert-foot{font-size:11px;color:var(--ink3);line-height:1.65;text-align:left;width:100%}
+.chart{width:100%;height:auto;display:block}
+.memo{width:100%;text-align:left;font-size:13.5px;line-height:1.7;display:flex;flex-direction:column;gap:4px}
+.memo li{padding-left:1em;text-indent:-1em}
+.memo li::before{content:"・";color:var(--gold)}
+.cta{display:flex;flex-direction:column;gap:8px}
+.cta h3{font-size:17px;text-align:center}
+.cta a{display:flex;justify-content:space-between;align-items:center;gap:10px;text-decoration:none;color:var(--ink);background:var(--paper);
+  border-radius:8px;box-shadow:0 0 0 1px var(--line);padding:13px 14px;font-weight:500;min-height:52px}
+.cta a small{display:block;font-weight:400;font-size:12px;color:var(--ink2)}
+.cta a::after{content:"→";color:var(--gold)}
+.cta a.main{background:var(--ink);color:#fff;box-shadow:none}
+.cta a.main small{color:rgba(255,255,255,.72)}
+.cta a.main::after{color:var(--gold2)}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(11,18,28,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet img{max-height:72%;width:auto;max-width:100%;border-radius:3px;-webkit-touch-callout:default;user-select:auto}
+.sheet p{color:#fff;font-size:13.5px;text-align:center}
+.sheet .btn{max-width:260px;background:#fff;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud" hidden>
+    <img class="hud-logo" src="logo.png" alt="ZUTTO Diamond">
+    <div class="hud-step"><span class="cap" id="hudCap">STEP 1 / 7</span><span class="dots" id="hudDots"></span></div>
+    <div class="timer" id="hudTimer"><span>残り </span><b id="tnum">12</b><span> 秒</span></div>
+  </header>
+  <div class="tbar" id="tbarWrap" hidden><i id="tbar"></i></div>
+
+  <!-- タイトル -->
+  <section class="screen scroll" id="s-title">
+    <div class="title-wrap">
+      <img class="t-logo" src="logo.png" alt="ZUTTO Diamond">
+      <div class="t-photo"><img src="img/diamond.jpg" alt="ラボグロウンダイヤモンド"></div>
+      <p class="cap">Lab-Grown Diamond Experience</p>
+      <h1>うちの子の毛が、<br>ダイヤモンドになるまで</h1>
+      <svg class="hair" viewBox="0 0 300 22" aria-hidden="true"><path d="M2 13 C 70 24, 170 20, 298 3" fill="none" stroke="#C6A862" stroke-width="1"/></svg>
+      <p class="lead">ラボグロウンダイヤモンドが生まれる工程を、<span style="white-space:nowrap">約1分</span>のゲームで体験できます。ゲームオーバーはありません。</p>
+      <ol class="flow"><li>採取</li><li>炭素の抽出</li><li>種結晶</li><li>結晶の成長</li><li>研磨</li><li>デザイン</li><li>鑑定</li></ol>
+      <button class="btn" id="startBtn" type="button">体験をはじめる</button>
+      <p class="fine">入力した内容は保存されません。音は出ません。</p>
+    </div>
+  </section>
+
+  <!-- ペット情報 -->
+  <section class="screen scroll" id="s-intro" hidden>
+    <div class="form">
+      <div><p class="cap">Your Pet</p><h2>うちの子について教えてください</h2></div>
+      <div class="field"><label for="petName">お名前（鑑定書に入ります）</label>
+        <input class="inp" id="petName" type="text" maxlength="12" placeholder="例：モコ" autocomplete="off" enterkeyhint="done"></div>
+      <div class="field"><span class="lab">種類</span><div class="seg" id="segSpecies"></div></div>
+      <div class="field"><span class="lab">お預かりする素材</span><div class="seg" id="segMaterial"></div>
+        <p class="hintbox" id="matHint"></p></div>
+      <button class="btn" id="introGo" type="button">工程へ進む</button>
+    </div>
+  </section>
+
+  <!-- 工程 -->
+  <section class="screen" id="s-stage" hidden>
+    <div class="stage-head"><span class="cap" id="stCap">STEP 1</span><h2 id="stTitle"></h2></div>
+    <div class="stage-body">
+      <div class="cvwrap"><canvas id="cv"></canvas></div>
+      <div class="info" id="stageInfo"></div>
+      <div class="ctl" id="stageCtl"></div>
+      <div class="overlay" id="overlay" hidden></div>
+    </div>
+  </section>
+
+  <!-- デザイン選択 -->
+  <section class="screen scroll" id="s-design" hidden>
+    <div class="d-head">
+      <img class="d-stone" src="img/diamond.jpg" alt="">
+      <div><p class="cap">Step 6 ・ Design</p><h2><span id="dName"></span>のダイヤモンド</h2>
+        <p><b id="dCt"></b> ct・直径 約<span id="dMm"></span>mm</p></div>
+    </div>
+    <p class="lead" style="max-width:none">磨き上がったダイヤモンドを、どのジュエリーに仕立てるか選んでください。</p>
+    <div class="tabs" role="tablist" id="dTabs">
+      <button class="tab" role="tab" data-t="std" aria-selected="true" type="button">定番デザイン</button>
+      <button class="tab" role="tab" data-t="col" aria-selected="false" type="button">コレクション</button>
+      <button class="tab" role="tab" data-t="full" aria-selected="false" type="button">フルオーダー</button>
+    </div>
+    <div id="dPanel" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div class="d-foot"><p class="d-sel" id="dSel">デザインを1つ選んでください</p>
+      <button class="btn gold" id="dGo" type="button" disabled>このデザインで鑑定へ</button></div>
+  </section>
+
+  <!-- 結果 -->
+  <section class="screen scroll" id="s-result" hidden>
+    <div class="r-hero">
+      <p class="cap">Step 7 ・ Complete</p>
+      <h2><span class="nw"><span id="rName"></span>の</span><span class="nw">ダイヤモンド</span><span class="nw">ジュエリーが</span><span class="nw">完成しました</span></h2>
+      <figure class="r-photo"><img id="rImg" alt=""><figcaption id="rCap"></figcaption></figure>
+      <p class="fine" id="rNote"></p>
+    </div>
+    <div class="tabs" role="tablist" id="rTabs">
+      <button class="tab" role="tab" data-t="front" aria-selected="true" type="button">鑑定書</button>
+      <button class="tab" role="tab" data-t="back" aria-selected="false" type="button">個体分析書</button>
+    </div>
+    <article class="cert" id="certFront"></article>
+    <article class="cert" id="certBack" hidden></article>
+    <button class="btn ghost" id="savePng" type="button">鑑定書を画像にして保存する</button>
+    <div class="cta" id="cta"></div>
+    <button class="btn ghost" id="again" type="button">もう一度あそぶ</button>
+    <p class="fine" style="text-align:center;padding-bottom:8px">このゲームは工程をわかりやすく体験するためのものです。実際の製作条件・期間とは異なります。</p>
+  </section>
+</div>
+<div class="sheet" id="sheet" hidden>
+  <img id="sheetImg" alt="鑑定書の画像">
+  <p>画像を長押し（パソコンは右クリック）すると保存できます。</p>
+  <button class="btn" id="sheetClose" type="button">閉じる</button>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   CONFIG：数値はすべてここで差し替えできます
+   （実際の温度・期間などは確認中のため、画面には断定的な数値を出していません）
+   ============================================================ */
+const CONFIG = {
+  links: {
+    simulator: 'https://sirius-diamond.com/zutto/simulator.html',
+    contact:   'https://sirius-diamond.com/contact',
+    line:      'https://lin.ee/6tNAPNH',
+  },
+  realLeadTime: '約1ヶ月半〜3ヶ月',          // 鑑定書の「飼い主への一言」に出る実際の製作期間の目安
+  time: { harvest: 12, extract: 20, cvd: 20, cut: 15 },   // 各ステージの秒数
+  material: {                               // 素材ごとの難易度補正
+    hair:  { label: '毛', word: '毛',   zone: 1.0, disturb: 1.0, purityRate: 1.0 },
+    bone:  { label: '骨', word: 'お骨', zone: 0.7, disturb: 1.5, purityRate: 0.85 },
+    nail:  { label: '爪', word: '爪',   zone: 0.6, disturb: 2.0, purityRate: 0.8 },
+    tooth: { label: '歯', word: '歯',   zone: 0.6, disturb: 2.0, purityRate: 0.8 },
+  },
+  harvest: { strokeToFill: 4, minAmount: 0.25 },        // 画面幅の何倍なでたら満量か
+  extract: { zoneCenter: .62, zoneHalf: .17, heat: .7, cool: .5, damping: 2.2,
+             kickEvery: [4.5, 6.5], kick: .22, fullAt: .82 },   // fullAt＝適正に保つべき時間の割合（これで純度100%）
+  cvd:     { zoneHalf: .2, drift: [.03, .055], step: .07, growthBoost: 1.15 },
+  cut:     { facets: 6, speed: [.7, 1.1], zoneHalf: [.18, .13], goodExtra: .08,
+             score: { perfect: 1, good: .72, miss: .3 } },
+  carats: [0.10, 0.15, 0.20, 0.30, 0.50, 0.70, 1.00],
+  mm:     [3.0, 3.4, 3.8, 4.3, 5.1, 5.7, 6.4],
+  hours:  [8, 10, 11, 12, 14, 16, 18],      // ゲーム内の製作時間（カラット別）
+  hourSplit: { extract: .25, cvd: .55, cut: .20 },
+  grade: {
+    harvestCap: [[.95,6],[.8,5],[.65,4],[.5,3],[.35,2],[.2,1],[0,0]],
+    growth:     [[.97,6],[.9,5],[.8,4],[.65,3],[.5,2],[.3,1],[0,0]],
+    color:   [[.97,'D'],[.93,'E'],[.88,'F'],[.82,'G'],[.75,'H'],[.68,'I'],[.6,'J'],[.53,'K'],[.47,'L'],[.41,'M'],[.36,'N'],[.33,'O'],[.3,'P'],
+              [.27,'Q'],[.24,'R'],[.21,'S'],[.18,'T'],[.15,'U'],[.12,'V'],[.09,'W'],[.06,'X'],[.03,'Y'],[0,'Z']],
+    clarity: [[.98,'FL'],[.94,'IF'],[.89,'VVS1'],[.83,'VVS2'],[.75,'VS1'],[.66,'VS2'],[.55,'SI1'],[.44,'SI2'],[.32,'I1'],[.2,'I2'],[0,'I3']],
+    cut:     [[.88,'Excellent'],[.72,'Very Good'],[.55,'Good'],[.38,'Fair'],[0,'Poor']],
+    rank:    [[.88,'S'],[.75,'A'],[.6,'B'],[0,'C']],
+  },
+};
+
+/* ---------- 公式シミュレーターの実データ（名称・コード・写真） ---------- */
+const STD = [
+  ['n01','デザイン01','4本爪ネックレス'],['n02','デザイン02','6本爪ネックレス（縦バチカン）'],['n03','デザイン03','馬蹄ネックレス'],
+  ['n04','デザイン04','流れるデザインネックレス'],['n05','デザイン05','伏せ込みネックレス'],['n07','デザイン07','ダイヤの取り巻きネックレス'],
+  ['r01','デザイン08','ストレートベゼルセッティングリング'],['r02','デザイン09','甲丸ダイヤモンドリング'],['r03','デザイン10','ストレートベゼル一粒リング'],
+  ['b01','デザイン11','ベゼルセッティングブレスレット'],['b02','デザイン12','イニシャル＆パールブレスレット'],
+];
+const COLLECTION = ('ZT-RI-010|ラウンドワンストーン リング|ring|シンプル・ワンストーン;ZT-RI-009|フラットワンストーン リング|ring|シンプル・ワンストーン;ZT-RI-019|クロスフラッシュ リング|ring|シンプル・ワンストーン;'
++'ZT-RI-006|ツインフラッシュ リング|ring|複数のペットに（ツイン・スリー）;ZT-RI-008|スリーストーン フラッシュ リング|ring|複数のペットに（ツイン・スリー）;ZT-RI-007|ツインプロング リング|ring|複数のペットに（ツイン・スリー）;'
++'ZT-RI-018|シンプルソリテール リング|ring|婚約・節目に;ZT-RI-040|サイドストーン リング|ring|婚約・節目に;ZT-RI-016|ウェーブサイドストーン リング|ring|婚約・節目に;ZT-RI-017|シックスプロング パヴェリング|ring|婚約・節目に;ZT-RI-020|フォープロング パヴェリング|ring|婚約・節目に;ZT-RI-015|プチヘイロー リング|ring|婚約・節目に;'
++'ZT-RI-001|スプリットヘイロー リング|ring|ファッションリング;ZT-RI-004|ラウンドヘイロー リング|ring|ファッションリング;ZT-RI-005|クッションヘイロー リング|ring|ファッションリング;ZT-RI-002|トリプルライン リング|ring|ファッションリング;ZT-RI-003|クロスヘイロー リング|ring|ファッションリング;ZT-RI-013|トリカラークロス リング|ring|ファッションリング;'
++'ZT-RI-012|ファセット リング|ring|毎日に;ZT-RI-011|ウェーブソリテール リング|ring|毎日に;ZT-RI-014|センターベゼル バンドリング|ring|毎日に;'
++'ZT-RI-064|ラウンドフレーム リング|ring|ピンキーリング;ZT-RI-024|ミルグレイン ピンキーリング|ring|ピンキーリング;ZT-RI-025|クラウン ピンキーリング|ring|ピンキーリング;'
++'ZT-NE-062|ラウンドフレーム ネックレス|neck|一粒（ソリティア）;ZT-NE-004|シックスプロング ネックレス|neck|一粒（ソリティア）;ZT-NE-003|フォープロング ネックレス|neck|一粒（ソリティア）;ZT-NE-002|ラウンドベース ネックレス|neck|一粒（ソリティア）;ZT-NE-008|ドロップバチカン ネックレス|neck|一粒（ソリティア）;ZT-NE-010|ダブルカーブ ネックレス|neck|一粒（ソリティア）;'
++'ZT-NE-060|ホースシュー ネックレス|neck|ホースシュー・ヘイロー;ZT-NE-009|パヴェホースシュー ネックレス|neck|ホースシュー・ヘイロー;ZT-NE-014|ラウンドヘイロー ネックレス|neck|ホースシュー・ヘイロー;'
++'ZT-NE-070|スリーストーン カーブ|neck|曲線のモチーフ;ZT-NE-072|リーフパヴェ ネックレス|neck|曲線のモチーフ;ZT-NE-063|ツイスト ネックレス|neck|曲線のモチーフ;'
++'ZT-NE-012|フローティングドロップ ネックレス|neck|しずく・ハート;ZT-NE-011|パヴェドロップ ネックレス|neck|しずく・ハート;ZT-NE-007|フローハート ネックレス|neck|しずく・ハート;'
++'ZT-NE-005|ヘキサゴン ネックレス|neck|ヘキサゴン・グリーンハート;ZT-NE-005-P|ヘキサゴン ネックレス（パール）|neck|ヘキサゴン・グリーンハート;ZT-NE-006|グリーンハート ネックレス|neck|ヘキサゴン・グリーンハート;'
++'ZT-AC-006|ラウンドフレーム タイタック|men|タイタック;ZT-AC-004|トリニティ タイタック|men|タイタック;ZT-AC-002|パヴェトリニティ タイタック|men|タイタック;ZT-AC-003|シングルヘイロー タイタック|men|タイタック;ZT-AC-067|ダブルヘイロー タイタック|men|タイタック;ZT-AC-005|カーブパヴェ タイタック|men|タイタック;'
++'ZT-RI-021|スクエアシグネット リング|men|リング・ネックレス;ZT-RI-022|ワイドフラッシュ リング|men|リング・ネックレス;ZT-RI-023|オーバルシグネット リング|men|リング・ネックレス;ZT-NE-013|バーティカルプレート ネックレス|men|リング・ネックレス;'
++'ZT-BR-065|ラウンドフレーム ブレスレット|brac|ブレスレット・バングル;ZT-BR-001|イニシャル ダブルチェーン ブレスレット|brac|ブレスレット・バングル;ZT-BR-002|インフィニティ ブレスレット|brac|ブレスレット・バングル;ZT-BR-003|パヴェホースシュー バングル|brac|ブレスレット・バングル;'
++'BE-rabbit|うさぎのモチーフ|order|うちの子をモチーフに;BE-stretchcat|ストレッチキャット|order|うちの子をモチーフに;BE-sleepcat|丸く眠る猫|order|うちの子をモチーフに;BE-dog|首をかしげる犬|order|うちの子をモチーフに')
+  .split(';').map(s => { const [code, name, group, sub] = s.split('|'); return { code, name, group, sub }; });
+const COL_GROUPS = [['all','すべて'],['ring','リング'],['neck','ネックレス'],['men','メンズ'],['brac','ブレスレット'],['order','ペットオーダー']];
+const METAL_COLORS = [['white','ホワイト','#D8D9DB'],['yellow','イエロー','#D9C292'],['pink','ピンク','#E7B7B0']];
+const SPECIES = [['dog','犬'],['cat','猫'],['horse','馬'],['rabbit','うさぎ'],['hamster','ハムスター'],['bird','鳥'],['other','その他']];
+const FUR = {
+  dog:['#6b4a2b','#8a6238','#b08650','#d6b684'], cat:['#47443f','#6e6a63','#989389','#c8c2b6'], horse:['#3d2414','#5c361d','#7d4c2a','#a56c40'],
+  rabbit:['#b3a796','#d3c9b9','#ebe4d7','#fbf8f1'], hamster:['#a37b4a','#c9a26c','#e2c595','#f5e7c9'], bird:['#557a86','#84a7a6','#b9d0c4','#e8f0e4'],
+  other:['#5a4a3a','#7d6a55','#a59078','#d0bea6'],
+};
+const STEP_NAMES = ['採取','炭素の抽出','種結晶','結晶の成長','研磨','デザイン','鑑定'];
+
+/* ---------- 小道具 ---------- */
+const $ = s => document.querySelector(s);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = ([a, b]) => a + Math.random() * (b - a);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mixRGB = (a, b, t) => a.map((v, i) => Math.round(lerp(v, b[i], t)));
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const pick = (list, s) => { for (const [min, v] of list) if (s >= min) return v; return list[list.length - 1][1]; };
+const FONT_BODY = '"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif';
+const FONT_DISP = '"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif';
+const FONT_CAP = 'Cinzel,"Shippori Mincho",serif';
+function rr(g, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+
+/* ---------- 状態 ---------- */
+const state = { name: '', species: 'dog', material: 'hair', metal: 'white', design: null, result: null };
+function resetRun() { Object.assign(state, { harvest: 1, purity: 0, growth: 0, gas: 0, stability: 0, tempRate: 0, cut: [], cutScore: 0, timeline: [], layers: [], design: null, result: null }); }
+const petName = () => state.name.trim() || 'うちの子';
+const MAT = () => CONFIG.material[state.material];
+
+/* ---------- 画面切り替え ---------- */
+const screens = ['s-title', 's-intro', 's-stage', 's-design', 's-result'];
+let screenId = 's-title';
+function show(id) { screenId = id; screens.forEach(s => { $('#' + s).hidden = s !== id; }); $('#hud').hidden = (id === 's-title' || id === 's-intro'); const sc = $('#' + id); if (sc.classList.contains('scroll')) sc.scrollTop = 0; }
+function setHud(stepIdx, timed) {
+  $('#hudCap').textContent = `STEP ${stepIdx + 1} / 7`;
+  $('#hudDots').innerHTML = STEP_NAMES.map((_, i) => `<i class="${i < stepIdx ? 'done' : i === stepIdx ? 'now' : ''}"></i>`).join('');
+  $('#hudTimer').style.visibility = timed ? 'visible' : 'hidden';
+  $('#tbarWrap').hidden = !timed;
+}
+
+/* ============================================================
+   工程エンジン
+   ============================================================ */
+const cv = $('#cv'), g = cv.getContext('2d'), info = $('#stageInfo'), ctl = $('#stageCtl'), ov = $('#overlay');
+let cur = null, stageIdx = 0, running = false, tLeft = 0, lastT = 0, W = 300, H = 200, dpr = 1;
+
+function resizeCanvas() {
+  const r = cv.getBoundingClientRect(); if (r.width < 10 || r.height < 10) return;
+  dpr = Math.min(2, window.devicePixelRatio || 1); W = r.width; H = r.height;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  if (cur && cur.resize) cur.resize();
+}
+if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(cv.parentElement); else window.addEventListener('resize', resizeCanvas);
+
+function overlay(html, label, cb) {
+  ov.innerHTML = `<div class="ov-card">${html}<button class="btn" type="button" id="ovBtn">${label}</button></div>`;
+  ov.hidden = false;
+  $('#ovBtn').addEventListener('click', () => { ov.hidden = true; cb(); }, { once: true });
+}
+function startStage(i) {
+  stageIdx = i; cur = STAGES[i];
+  if (i === 0 && state.material !== 'hair') cur = acceptStage;
+  show('s-stage'); setHud(cur.step - 1, !!cur.time);
+  $('#stCap').textContent = 'STEP ' + cur.step; $('#stTitle').textContent = cur.title;
+  info.innerHTML = ''; ctl.innerHTML = '';
+  cur.setup(); running = false; tLeft = cur.time || 0; drawTimer();
+  requestAnimationFrame(resizeCanvas);
+  const b = cur.brief();
+  overlay(`<p class="cap">Step ${cur.step} ・ ${esc(cur.cap || STEP_NAMES[cur.step - 1])}</p><h3>${b.title}</h3><p>${b.text}</p>${b.how ? `<p class="how"><b>あそびかた</b>${b.how}</p>` : ''}`,
+    b.button || 'はじめる', () => { if (cur.instant) { cur.finish(); nextStage(); } else { running = true; if (cur.begin) cur.begin(); } });
+}
+function endStage() {
+  if (!running) return; running = false;
+  const o = cur.finish();
+  overlay(`<p class="cap">Step ${cur.step} ・ 完了</p><h3>${o.title}</h3>${o.stat ? `<p class="ov-stat">${o.stat}</p>` : ''}<p>${o.text}</p>`, o.button || '次の工程へ', nextStage);
+}
+function nextStage() { if (stageIdx < STAGES.length - 1) startStage(stageIdx + 1); else openDesign(); }
+function drawTimer() {
+  if (!cur || !cur.time) return;
+  $('#tnum').textContent = Math.ceil(tLeft);
+  $('#tbar').style.transform = `scaleX(${clamp(tLeft / cur.time)})`;
+}
+function loop(ts) {
+  const dt = Math.min(.05, (ts - lastT) / 1000 || 0); lastT = ts;
+  if (cur && screenId === 's-stage') {
+    if (running) {
+      cur.update(dt);
+      if (running && cur.time) { tLeft -= dt; if (tLeft <= 0) { tLeft = 0; endStage(); } }
+    }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cur.draw(g, W, H, ts / 1000);
+    drawTimer();
+  }
+  requestAnimationFrame(loop);
+}
+['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(n => cv.addEventListener(n, e => {
+  if (!cur || !cur.pointer) return;
+  const r = cv.getBoundingClientRect();
+  if (n === 'pointerdown') { try { cv.setPointerCapture(e.pointerId); } catch (_) {} }
+  cur.pointer(n, e.clientX - r.left, e.clientY - r.top);
+  e.preventDefault();
+}));
+cv.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => { if ((e.code === 'Space' || e.code === 'Enter') && cur && cur.key && running && !e.repeat && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') { cur.key(true); e.preventDefault(); } });
+document.addEventListener('keyup', e => { if ((e.code === 'Space' || e.code === 'Enter') && cur && cur.key) cur.key(false); });
+/* 連打での拡大（ダブルタップズーム・ピンチ）を止める */
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(n => document.addEventListener(n, e => e.preventDefault(), { passive: false }));
+
+function labText(g, text, x, y, size, color, align) {
+  g.font = `500 ${size}px ${FONT_BODY}`; g.textAlign = align || 'center'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(0,0,0,.55)'; g.fillText(text, x + 1, y + 1); g.fillStyle = color || '#fff'; g.fillText(text, x, y);
+}
+
+/* ---------- STEP 1：採取（ブラッシング） ---------- */
+const flow = (x, y) => 1.25 + .45 * Math.sin(x * .012 + 1) + .3 * Math.cos(y * .016);
+function drawBrush(g, x, y, ang, alpha) {
+  g.save(); g.translate(x, y); g.rotate(ang); g.globalAlpha = alpha;
+  g.fillStyle = 'rgba(0,0,0,.3)'; rr(g, -36, -8, 78, 30, 12); g.fill();
+  g.fillStyle = '#231a12'; for (let i = 0; i < 10; i++) g.fillRect(-33 + i * 7, 8, 3, 8);
+  const wd = g.createLinearGradient(0, -16, 0, 12); wd.addColorStop(0, '#c2956a'); wd.addColorStop(1, '#7a5433');
+  g.fillStyle = wd; rr(g, -38, -16, 76, 27, 12); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.28)'; rr(g, -29, -12, 58, 4, 2); g.fill();
+  g.restore();
+}
+const harvestStage = {
+  step: 1, title: '毛の採取', time: CONFIG.time.harvest,
+  brief() { return { title: 'ブラッシングで毛を集める',
+    text: 'ダイヤモンドの材料は、毛に含まれる「炭素」です。まずはやさしくブラッシングして、手のひらいっぱい分の毛を集めます。',
+    how: `画面を指で左右になでてください（${this.time}秒）。失敗はありません。` }; },
+  setup() {
+    Object.assign(this, { amount: 0, trail: [], tufts: [], touched: false, down: false, px: 0, py: 0, ang: 0, fullT: 0, fur: null });
+    info.innerHTML = `<div><div class="hand-top"><span>集めた毛</span><span class="hand-num">手のひら <b id="hvNum">0.0</b> / 1.0 杯分</span></div><div class="track"><div class="fill" id="hvFill"></div></div></div>`;
+    ctl.innerHTML = `<p class="hint" id="hvHint">指で左右になでて、ブラッシングしてください</p>`;
+  },
+  resize() { this.buildFur(); },
+  buildFur() {
+    const c = document.createElement('canvas'); c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+    const f = c.getContext('2d'); f.scale(dpr, dpr);
+    const pal = FUR[state.species] || FUR.other, r = rng(11);
+    f.fillStyle = pal[0]; f.fillRect(0, 0, W, H);
+    const n = Math.round(W * H / 15);
+    f.lineCap = 'round';
+    for (let pass = 0; pass < 3; pass++) for (let i = 0; i < n / 3; i++) {
+      const x = r() * (W + 40) - 20, y = r() * (H + 40) - 20, a = flow(x, y) + (r() - .5) * .55, len = 14 + r() * 24;
+      f.strokeStyle = pal[Math.min(3, pass + (r() < .3 ? 1 : 0))]; f.globalAlpha = .35 + r() * .5; f.lineWidth = .7 + r() * 1.2;
+      f.beginPath(); f.moveTo(x, y); f.quadraticCurveTo(x + Math.cos(a + .35) * len * .5, y + Math.sin(a + .35) * len * .5, x + Math.cos(a) * len, y + Math.sin(a) * len); f.stroke();
+    }
+    f.globalAlpha = 1;
+    const lg = f.createRadialGradient(W * .5, H * .4, 10, W * .5, H * .5, Math.max(W, H) * .8);
+    lg.addColorStop(0, 'rgba(255,255,255,.12)'); lg.addColorStop(1, 'rgba(0,0,0,.5)'); f.fillStyle = lg; f.fillRect(0, 0, W, H);
+    this.fur = c; this.furG = f;
+  },
+  pointer(n, x, y) {
+    if (!running) return;
+    if (n === 'pointerdown') { this.down = true; this.px = x; this.py = y; this.touched = true; return; }
+    if (n === 'pointerup' || n === 'pointercancel') { this.down = false; return; }
+    if (!this.down) return;
+    const dx = x - this.px, dy = y - this.py, d = Math.hypot(dx, dy); if (d < 2) return;
+    this.amount = clamp(this.amount + d / (W * CONFIG.harvest.strokeToFill));
+    this.ang = Math.atan2(dy, dx);
+    this.trail.push({ x, y, t: performance.now() }); if (this.trail.length > 60) this.trail.shift();
+    const pal = FUR[state.species] || FUR.other, f = this.furG;
+    if (f) { f.lineCap = 'round'; for (let k = 0; k < 5; k++) { const ox = (Math.random() - .5) * 50, oy = (Math.random() - .5) * 50, len = 16 + Math.random() * 18;
+      f.strokeStyle = pal[3]; f.globalAlpha = .28; f.lineWidth = 1; f.beginPath(); f.moveTo(x + ox, y + oy); f.lineTo(x + ox + Math.cos(this.ang) * len, y + oy + Math.sin(this.ang) * len); f.stroke(); } f.globalAlpha = 1; }
+    if (Math.random() < .45 && this.tufts.length < 40) this.tufts.push({ sx: x, sy: y, u: 0, off: (Math.random() - .5) * 90, rot: Math.random() * 6 });
+    this.px = x; this.py = y;
+  },
+  update(dt) {
+    this.tufts.forEach(t => t.u += dt / .75); this.tufts = this.tufts.filter(t => t.u < 1);
+    $('#hvNum').textContent = this.amount.toFixed(1); $('#hvFill').style.width = (this.amount * 100) + '%';
+    if (this.amount >= 1) { $('#hvHint').textContent = '手のひらいっぱいに集まりました'; this.fullT += dt; if (this.fullT > .9) endStage(); }
+  },
+  draw(g, W, H, t) {
+    if (!this.fur) this.buildFur();
+    g.drawImage(this.fur, 0, 0, W, H);
+    const now = performance.now();
+    g.save(); g.globalCompositeOperation = 'lighter'; g.lineCap = 'round';
+    for (let i = 1; i < this.trail.length; i++) { const a = this.trail[i - 1], b = this.trail[i], age = (now - b.t) / 700; if (age > 1) continue;
+      g.strokeStyle = `rgba(255,226,160,${(1 - age) * .2})`; g.lineWidth = 24 * (1 - age * .5); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); }
+    g.restore();
+    const pal = FUR[state.species] || FUR.other;
+    this.tufts.forEach(tf => { const u = tf.u, x = lerp(tf.sx, W / 2, u) + Math.sin(u * Math.PI) * tf.off, y = lerp(tf.sy, H + 14, u * u);
+      g.save(); g.translate(x, y); g.rotate(tf.rot + u * 3); g.strokeStyle = pal[2]; g.globalAlpha = 1 - u * .4; g.lineWidth = 1.2;
+      for (let k = -1; k <= 1; k++) { g.beginPath(); g.moveTo(-8, k * 3); g.quadraticCurveTo(0, k * 3 - 5, 9, k * 2); g.stroke(); } g.restore(); });
+    if (this.down) drawBrush(g, this.px, this.py, this.ang, 1);
+    if (!this.touched) {
+      const x = W / 2 + Math.sin(t * 2.2) * W * .27, y = H * .5 + Math.sin(t * 4.4) * 6;
+      g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, 0, W, H);
+      g.save(); g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(255,226,160,.35)'; g.lineWidth = 26; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(W / 2 - W * .27, H * .5); g.lineTo(x, y); g.stroke(); g.restore();
+      drawBrush(g, x, y, 0, 1);
+      labText(g, '←  指で左右になでる  →', W / 2, H * .5 - 52, 17);
+    }
+  },
+  finish() {
+    state.harvest = Math.max(CONFIG.harvest.minAmount, this.amount);
+    return { title: '毛が集まりました', stat: `<small>手のひら</small>${state.harvest.toFixed(1)} 杯分`,
+      text: '集めた毛が多いほど、取り出せる炭素が増え、大きなダイヤモンドを育てられます。' };
+  },
+};
+
+/* ---------- STEP 1（毛以外）：素材のお預かり ---------- */
+const acceptStage = {
+  step: 1, title: '素材のお預かり', cap: 'お預かり', time: 0, instant: true,
+  brief() { return { title: `${esc(petName())}の${MAT().word}を、大切にお預かりしました`,
+    text: `ダイヤモンドの材料は、素材に含まれる「炭素」です。${MAT().word}は毛にくらべて炭素を取り出しにくいため、このあとの工程が少し難しくなります。`, button: '次の工程へ' }; },
+  setup() {}, update() {},
+  draw(g, W, H, t) {
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#0b121c'); bg.addColorStop(1, '#1a2536'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H * .55, s = Math.min(W, H) * .22;
+    const lg = g.createRadialGradient(cx, cy - s, 4, cx, cy, s * 3); lg.addColorStop(0, 'rgba(255,240,210,.22)'); lg.addColorStop(1, 'rgba(255,240,210,0)'); g.fillStyle = lg; g.fillRect(0, 0, W, H);
+    g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.ellipse(cx, cy + s * 1.02, s * .9, s * .16, 0, 0, 7); g.fill();
+    const bd = g.createLinearGradient(cx - s, 0, cx + s, 0); bd.addColorStop(0, '#c9c2b4'); bd.addColorStop(.4, '#f6f2e8'); bd.addColorStop(1, '#a9a294');
+    g.fillStyle = bd; rr(g, cx - s * .7, cy - s * .5, s * 1.4, s * 1.5, s * .3); g.fill();
+    g.fillStyle = '#b79a5c'; rr(g, cx - s * .78, cy - s * .72, s * 1.56, s * .3, s * .1); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.35)'; rr(g, cx - s * .5, cy - s * .3, s * .14, s * 1.1, s * .07); g.fill();
+  },
+  finish() { state.harvest = 1; return {}; },
+};
+
+/* ---------- STEP 2：炭素の抽出 ---------- */
+function heatRGB(T) { const a = [72, 30, 22], b = [200, 62, 22], c = [252, 146, 52], d = [255, 228, 160]; return (T < .33 ? mixRGB(a, b, T / .33) : T < .66 ? mixRGB(b, c, (T - .33) / .33) : mixRGB(c, d, (T - .66) / .34)).join(','); }
+const extractStage = {
+  step: 2, title: '炭素の抽出', time: CONFIG.time.extract,
+  brief() { return { title: '高温で炭素を取り出す',
+    text: 'お預かりした素材を高温で加熱し、ダイヤモンドのもとになる炭素を取り出します。温度が低すぎても高すぎても、きれいな炭素は取り出せません。',
+    how: `ボタンを押している間だけ加熱されます。温度の印を金色の範囲に保ってください（${this.time}秒）。` }; },
+  setup() {
+    const C = CONFIG.extract, m = MAT();
+    Object.assign(this, { temp: .12, v: 0, heat: false, pur: 0, zc: C.zoneCenter, zh: C.zoneHalf * m.zone, kickIn: rand(C.kickEvery) / m.disturb, flash: 0, msgT: 0, parts: [], seed: rng(5) });
+    this.blobs = Array.from({ length: 30 }, () => ({ x: (this.seed() - .5) * 2, y: this.seed(), r: .5 + this.seed() * .5 }));
+    info.innerHTML = `<div class="mrow"><span class="ml">温度</span><div class="track"><div class="zone" style="left:${(this.zc - this.zh) * 100}%;width:${this.zh * 200}%"></div><div class="mark" id="exMark"></div></div><span class="chip" id="exChip">低い</span></div>
+      <div class="stat"><span>炭素の純度</span><b id="exPur">0</b><span>%</span></div>`;
+    ctl.innerHTML = `<button class="btn hold" id="exBtn" type="button">押している間、加熱する</button>`;
+    const b = $('#exBtn'), on = v => { this.heat = v; b.classList.toggle('on', v); };
+    b.addEventListener('pointerdown', e => { on(true); try { b.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => b.addEventListener(n, () => on(false)));
+    b.addEventListener('contextmenu', e => e.preventDefault());
+    b.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'Enter') { on(true); e.preventDefault(); } });
+    b.addEventListener('keyup', () => on(false));
+    this.setHeat = on;
+  },
+  pointer(n) { if (n === 'pointerdown') this.setHeat(true); else if (n !== 'pointermove') this.setHeat(false); },
+  key(v) { this.setHeat(v); },
+  update(dt) {
+    const C = CONFIG.extract, m = MAT();
+    this.v += (this.heat ? C.heat : -C.cool) * dt; this.v *= Math.max(0, 1 - C.damping * dt); this.temp += this.v * dt;
+    if (this.temp < 0) { this.temp = 0; this.v = 0; } if (this.temp > 1) { this.temp = 1; this.v = 0; }
+    this.kickIn -= dt; if (this.kickIn <= 0) { this.v += C.kick; this.flash = 1; this.msgT = 1.5; this.kickIn = rand(C.kickEvery) / m.disturb; }
+    this.flash = Math.max(0, this.flash - dt * 2.5); this.msgT = Math.max(0, this.msgT - dt);
+    const d = this.temp - this.zc, inZ = Math.abs(d) <= this.zh;
+    if (inZ) { this.pur = Math.min(1, this.pur + dt / (this.time * C.fullAt) * m.purityRate); if (Math.random() < dt * 14) this.parts.push({ x: (Math.random() - .5), y: 0, life: 0, ph: Math.random() * 6 }); }
+    this.parts.forEach(p => p.life += dt); this.parts = this.parts.filter(p => p.life < 1.8);
+    const mk = $('#exMark'), ch = $('#exChip');
+    mk.style.left = (this.temp * 100) + '%'; mk.classList.toggle('out', !inZ);
+    ch.textContent = inZ ? '適正' : d < 0 ? '低い' : '高すぎ'; ch.className = 'chip ' + (inZ ? 'ok' : d > 0 ? 'ng' : '');
+    $('#exPur').textContent = Math.round(this.pur * 100);
+  },
+  draw(g, W, H, t) {
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#0b121c'); bg.addColorStop(1, '#182233'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#0e1622'; g.fillRect(0, H * .82, W, H * .18); g.fillStyle = 'rgba(255,255,255,.06)'; g.fillRect(0, H * .82, W, 1);
+    const T = this.temp, cx = W / 2, cy = H * .47, tw = W * .88, th = Math.min(H * .36, 100), left = cx - tw / 2, hc = heatRGB(T);
+    const ag = g.createRadialGradient(cx, cy, 10, cx, cy, tw * .62); ag.addColorStop(0, `rgba(${hc},${.06 + T * .3})`); ag.addColorStop(1, `rgba(${hc},0)`); g.fillStyle = ag; g.fillRect(0, 0, W, H);
+    const zl = left + tw * .17, zw = tw * .66, n = Math.max(6, Math.round(zw / 30));
+    g.lineWidth = 5; g.strokeStyle = `rgba(${hc},.5)`;
+    for (let i = 0; i < n; i++) { const x = zl + (i + .5) * zw / n; g.beginPath(); g.ellipse(x, cy, th * .19, th * .7, 0, Math.PI * .5, Math.PI * 1.5); g.stroke(); }
+    g.save(); rr(g, left, cy - th / 2, tw, th, th / 2); g.fillStyle = 'rgba(170,200,225,.08)'; g.fill(); g.clip();
+    const ig = g.createRadialGradient(cx, cy, 2, cx, cy, zw * .6); ig.addColorStop(0, `rgba(${hc},${.12 + T * .5})`); ig.addColorStop(1, `rgba(${hc},0)`); g.fillStyle = ig; g.fillRect(left, cy - th / 2, tw, th);
+    const by = cy + th * .2, bw = th * .82;
+    const fur = hex((FUR[state.species] || FUR.other)[state.material === 'hair' ? 2 : 3]), col = mixRGB(state.material === 'hair' ? fur : [226, 220, 205], [20, 20, 23], clamp(this.pur * 1.15));
+    this.blobs.forEach(b => { g.fillStyle = `rgb(${mixRGB(col, [0, 0, 0], b.r * .25).join(',')})`; g.beginPath(); g.arc(cx + b.x * bw * (1 - this.pur * .2), by - b.y * th * .24 * (1 - this.pur * .25), th * .085 * b.r, 0, 7); g.fill(); });
+    if (T > .4) { g.globalCompositeOperation = 'lighter'; this.blobs.forEach((b, i) => { if (i % 3) return; g.fillStyle = `rgba(255,150,60,${(T - .4) * .7 * (.5 + .5 * Math.sin(t * 5 + i))})`; g.beginPath(); g.arc(cx + b.x * bw * .9, by - b.y * th * .2, th * .04, 0, 7); g.fill(); }); g.globalCompositeOperation = 'source-over'; }
+    g.fillStyle = '#b9b2a4'; rr(g, cx - bw * 1.12, by, bw * 2.24, th * .13, 5); g.fill();
+    this.parts.forEach(p => { const u = p.life / 1.8, x = cx + p.x * bw + u * tw * .46, y = cy - th * .08 + Math.sin(p.life * 5 + p.ph) * th * .12 - u * th * .1;
+      g.fillStyle = `rgba(205,225,255,${(1 - u) * .65})`; g.beginPath(); g.arc(x, y, 2.2 + u * 2, 0, 7); g.fill(); });
+    g.restore();
+    rr(g, left, cy - th / 2, tw, th, th / 2); g.strokeStyle = 'rgba(215,232,245,.4)'; g.lineWidth = 1.5; g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.26)'; g.lineWidth = 2; g.beginPath(); g.moveTo(left + th * .5, cy - th * .35); g.lineTo(left + tw - th * .5, cy - th * .35); g.stroke();
+    g.save(); g.shadowColor = `rgba(${hc},.95)`; g.shadowBlur = 5 + T * 24; g.lineWidth = 5; g.strokeStyle = `rgb(${hc})`;
+    for (let i = 0; i < n; i++) { const x = zl + (i + .5) * zw / n; g.beginPath(); g.ellipse(x, cy, th * .19, th * .7, 0, -Math.PI * .5, Math.PI * .5); g.stroke(); }
+    g.restore();
+    labText(g, '炭素ガス ▶', left + tw - 8, cy + th * .5 + 16, 11, 'rgba(215,228,245,.8)', 'right');
+    labText(g, '加熱炉', left + 8, cy + th * .5 + 16, 11, 'rgba(215,228,245,.6)', 'left');
+    if (this.flash > 0) { g.fillStyle = `rgba(255,140,70,${this.flash * .22})`; g.fillRect(0, 0, W, H); }
+    if (this.msgT > 0) labText(g, '不純物が反応して、温度が急に上がりました', W / 2, 20, 12.5, `rgba(255,214,170,${Math.min(1, this.msgT * 2)})`);
+  },
+  finish() {
+    state.purity = this.pur;
+    return { title: '炭素を取り出しました', stat: `<small>炭素の純度</small>${Math.round(this.pur * 100)}%`,
+      text: '純度が高いほど、透明で色のないダイヤモンドに近づきます。実際の製作でも、温度の管理がいちばん神経を使う工程のひとつです。' };
+  },
+};
+
+/* ---------- 装置（STEP 3・4 共通の描画） ---------- */
+function drawChamber(g, W, H, inner) {
+  const bg = g.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#1c232e'); bg.addColorStop(1, '#0d1219'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(255,255,255,.028)'; g.lineWidth = 1; for (let y = 3; y < H; y += 5) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+  const cx = W / 2, cy = H / 2, Ro = Math.min(W * .46, H * .47), R = Ro * .86;
+  const fg = g.createLinearGradient(cx - Ro, cy - Ro, cx + Ro, cy + Ro); fg.addColorStop(0, '#828c98'); fg.addColorStop(.5, '#39414c'); fg.addColorStop(1, '#646e7a');
+  g.beginPath(); g.arc(cx, cy, Ro, 0, 7); g.fillStyle = fg; g.fill();
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + .26, bx = cx + Math.cos(a) * Ro * .93, by = cy + Math.sin(a) * Ro * .93;
+    g.beginPath(); g.arc(bx, by, Ro * .03, 0, 7); g.fillStyle = '#262c35'; g.fill(); g.beginPath(); g.arc(bx - .6, by - .6, Ro * .015, 0, 7); g.fillStyle = '#929ca8'; g.fill(); }
+  g.save(); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip();
+  const ig = g.createRadialGradient(cx, cy, 4, cx, cy, R); ig.addColorStop(0, '#141b27'); ig.addColorStop(1, '#04060a'); g.fillStyle = ig; g.fillRect(cx - R, cy - R, R * 2, R * 2);
+  const py = cy + R * .44, prx = R * .5, pry = R * .1;
+  const pg = g.createLinearGradient(cx - prx, 0, cx + prx, 0); pg.addColorStop(0, '#272c34'); pg.addColorStop(.5, '#5b636e'); pg.addColorStop(1, '#20242b');
+  g.fillStyle = pg; g.fillRect(cx - prx, py, prx * 2, R); g.beginPath(); g.ellipse(cx, py, prx, pry, 0, 0, 7); g.fillStyle = '#6c7581'; g.fill();
+  g.beginPath(); g.ellipse(cx, py, prx * .84, pry * .78, 0, 0, 7); g.fillStyle = '#454c56'; g.fill();
+  inner({ cx, cy, R, py });
+  g.restore();
+  g.save(); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip();
+  const rg = g.createLinearGradient(cx - R, cy - R, cx, cy); rg.addColorStop(0, 'rgba(255,255,255,.16)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = rg; g.beginPath(); g.ellipse(cx - R * .36, cy - R * .46, R * .5, R * .26, -.6, 0, 7); g.fill(); g.restore();
+  g.beginPath(); g.arc(cx, cy, R, 0, 7); g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 3; g.stroke();
+}
+function drawCrystal(g, cx, baseY, w, h, layers) {
+  const top = baseY - h, d = w * .2, n = Math.max(1, layers ? layers.length : 1);
+  for (let i = 0; i < n; i++) { const L = (layers && layers[i]) || { cloud: 0, tint: 0 }, y0 = baseY - h * (i + 1) / n, lh = h / n + .7;
+    g.fillStyle = `rgba(${lerp(205, 224, L.tint) | 0},${lerp(229, 196, L.tint) | 0},${lerp(247, 128, L.tint) | 0},${.5 + L.cloud * .3})`; g.fillRect(cx - w / 2, y0, w, lh);
+    if (L.cloud > 0) { g.fillStyle = `rgba(255,255,255,${L.cloud * .4})`; g.fillRect(cx - w / 2, y0, w, lh); } }
+  const sg = g.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0); sg.addColorStop(0, 'rgba(255,255,255,.4)'); sg.addColorStop(.3, 'rgba(255,255,255,0)'); sg.addColorStop(.8, 'rgba(20,40,70,.2)'); sg.addColorStop(1, 'rgba(255,255,255,.22)');
+  g.fillStyle = sg; g.fillRect(cx - w / 2, top, w, h);
+  g.beginPath(); g.moveTo(cx - w / 2, top); g.lineTo(cx - w / 2 + d, top - d * .5); g.lineTo(cx + w / 2 + d, top - d * .5); g.lineTo(cx + w / 2, top); g.closePath(); g.fillStyle = 'rgba(236,247,255,.85)'; g.fill();
+  g.beginPath(); g.moveTo(cx + w / 2, top); g.lineTo(cx + w / 2 + d, top - d * .5); g.lineTo(cx + w / 2 + d, baseY - d * .5); g.lineTo(cx + w / 2, baseY); g.closePath(); g.fillStyle = 'rgba(150,186,216,.55)'; g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 1; g.strokeRect(cx - w / 2 + .5, top + .5, w - 1, Math.max(1, h - 1));
+}
+
+/* ---------- STEP 3：種結晶のセット ---------- */
+const seedStage = {
+  step: 3, title: '種結晶のセット', time: 0,
+  brief() { return { title: 'ダイヤモンドの「種」を置く',
+    text: 'ラボグロウンダイヤモンドは、「種結晶」と呼ばれるごく薄いダイヤモンドの板を土台にして育てます。取り出した炭素を、この板の上に積み重ねていきます。',
+    how: '画面をタップして、種結晶を装置の中央にセットします。' }; },
+  setup() { this.phase = 'wait'; this.u = 0; this.after = 0; ctl.innerHTML = `<button class="btn" id="sdBtn" type="button">種結晶をセットする</button>`; $('#sdBtn').addEventListener('click', () => this.go()); },
+  go() { if (running && this.phase === 'wait') { this.phase = 'drop'; const b = $('#sdBtn'); if (b) b.disabled = true; } },
+  pointer(n) { if (n === 'pointerdown') this.go(); },
+  key(v) { if (v) this.go(); },
+  update(dt) { if (this.phase === 'drop') { this.u = Math.min(1, this.u + dt / .9); if (this.u >= 1) this.phase = 'done'; } else if (this.phase === 'done') { this.after += dt; if (this.after > .7) endStage(); } },
+  draw(g, W, H, t) {
+    drawChamber(g, W, H, c => {
+      const e = 1 - Math.pow(1 - this.u, 3), w = c.R * .42, y0 = c.cy - c.R * .3 + Math.sin(t * 2.4) * (this.phase === 'wait' ? 4 : 0), y = lerp(y0, c.py - 3, e);
+      if (this.phase !== 'done') { g.strokeStyle = 'rgba(190,198,208,.8)'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(c.cx - w * .3, c.cy - c.R); g.lineTo(c.cx - w * .46, y - 5); g.moveTo(c.cx + w * .5, c.cy - c.R); g.lineTo(c.cx + w * .52, y - 5); g.stroke(); }
+      drawCrystal(g, c.cx, y, w, 5, null);
+      if (this.phase === 'done') { const a = Math.max(0, 1 - this.after * 1.6); g.strokeStyle = `rgba(255,255,255,${a})`; g.lineWidth = 2; g.beginPath(); g.ellipse(c.cx, c.py - 4, w * (.6 + this.after), w * .2 * (1 + this.after), 0, 0, 7); g.stroke(); }
+    });
+    if (this.phase === 'wait') labText(g, 'タップして種結晶をセット', W / 2, 20, 13.5);
+  },
+  finish() { return { title: '種結晶をセットしました', text: 'ここから、炭素が一層ずつ積み重なって結晶になっていきます。次はいよいよ、ダイヤモンドを育てる工程です。' }; },
+};
+
+/* ---------- STEP 4：結晶の成長（CVD） ---------- */
+const cvdStage = {
+  step: 4, title: '結晶の成長', time: CONFIG.time.cvd,
+  brief() { return { title: '炭素を積み重ねて育てる（CVD法）',
+    text: '炭素を含むガスをプラズマの状態にすると、炭素が種結晶の上に降り積もり、ダイヤモンドの結晶が少しずつ育ちます。成分も硬さも、天然のダイヤモンドと同じです。',
+    how: `3つの印が少しずつずれていきます。＋と−で金色の範囲に戻してください（${this.time}秒）。` }; },
+  setup() {
+    const C = CONFIG.cvd, m = MAT();
+    Object.assign(this, { p: [.5, .5, .5], dir: [0, 1, 2].map(() => Math.random() < .5 ? 1 : -1), spd: [0, 1, 2].map(() => rand(C.drift) * m.disturb), flip: [0, 1, 2].map(() => rand([1.5, 3.5])),
+      zh: C.zoneHalf * m.zone, growth: 0, inT: [0, 0, 0], el: 0, layers: [], tl: [], acc: 0, jit: 0 });
+    const rows = [['温度', '成長の速さ'], ['ガス', '色あい'], ['プラズマ', '透明感']];
+    info.innerHTML = rows.map(([a, b], i) => `<div class="prow"><span class="pl">${a}<small>${b}</small></span><button class="pm" type="button" data-i="${i}" data-d="-1" aria-label="${a}を下げる">−</button><div class="track"><div class="zone" style="left:${(.5 - this.zh) * 100}%;width:${this.zh * 200}%"></div><div class="mark" id="cvM${i}"></div></div><button class="pm" type="button" data-i="${i}" data-d="1" aria-label="${a}を上げる">＋</button></div>`).join('')
+      + `<div class="stat"><span>結晶の成長</span><b id="cvG">0</b><span>%</span></div>`;
+    info.querySelectorAll('.pm').forEach(b => { b.addEventListener('pointerdown', e => { if (!running) return; const i = +b.dataset.i; this.p[i] = clamp(this.p[i] + (+b.dataset.d) * C.step); e.preventDefault(); });
+      b.addEventListener('keydown', e => { if ((e.code === 'Space' || e.code === 'Enter') && running && !e.repeat) { const i = +b.dataset.i; this.p[i] = clamp(this.p[i] + (+b.dataset.d) * C.step); } });
+      b.addEventListener('contextmenu', e => e.preventDefault()); });
+  },
+  update(dt) {
+    const C = CONFIG.cvd, m = MAT(); this.el += dt;
+    for (let i = 0; i < 3; i++) {
+      this.flip[i] -= dt; if (this.flip[i] <= 0) { if (Math.random() < .6) this.dir[i] *= -1; this.spd[i] = rand(C.drift) * m.disturb; this.flip[i] = rand([1.5, 3.5]); }
+      this.p[i] += this.dir[i] * this.spd[i] * dt; if (this.p[i] <= 0.02) { this.p[i] = .02; this.dir[i] = 1; } if (this.p[i] >= .98) { this.p[i] = .98; this.dir[i] = -1; }
+    }
+    const off = this.p.map(v => Math.abs(v - .5)), inz = off.map(o => o <= this.zh);
+    inz.forEach((b, i) => { if (b) this.inT[i] += dt; });
+    if (inz[0]) this.growth = Math.min(1, this.growth + dt / this.time * C.growthBoost);
+    const want = Math.floor(this.growth * 30), ex = o => clamp((o - this.zh) / (.5 - this.zh)) * .7 + .3;
+    while (this.layers.length < want) this.layers.push({ cloud: inz[2] ? 0 : ex(off[2]), tint: inz[1] ? 0 : ex(off[1]) });
+    this.acc += dt; if (this.acc >= .5) { this.acc = 0; this.tl.push(1 - clamp(off[2] / .5)); }
+    this.jit = inz[2] ? 0 : ex(off[2]);
+    for (let i = 0; i < 3; i++) { const mk = $('#cvM' + i); mk.style.left = (this.p[i] * 100) + '%'; mk.classList.toggle('out', !inz[i]); }
+    $('#cvG').textContent = Math.round(this.growth * 100);
+  },
+  draw(g, W, H, t) {
+    drawChamber(g, W, H, c => {
+      const w = c.R * .42, h = 5 + this.growth * c.R * .52, top = c.py - 3 - h;
+      drawCrystal(g, c.cx, c.py - 3, w, h, this.layers.length ? this.layers : null);
+      const gasOff = clamp(Math.abs(this.p[1] - .5) / .5), b = .55 + this.p[0] * .6, j = this.jit * (Math.sin(t * 31) * .5 + Math.sin(t * 47) * .5);
+      const pr = c.R * (.5 + .04 * Math.sin(t * 7) + j * .12), pcy = top - c.R * .14 + j * 4;
+      const c1 = mixRGB([214, 120, 255], [255, 150, 90], gasOff), c2 = mixRGB([124, 70, 235], [220, 90, 120], gasOff);
+      g.globalCompositeOperation = 'lighter';
+      const pg = g.createRadialGradient(c.cx, pcy, 2, c.cx, pcy, pr); pg.addColorStop(0, `rgba(255,238,255,${.85 * b})`); pg.addColorStop(.25, `rgba(${c1},${.6 * b})`); pg.addColorStop(.6, `rgba(${c2},${.28 * b})`); pg.addColorStop(1, 'rgba(60,30,140,0)');
+      g.fillStyle = pg; g.beginPath(); g.ellipse(c.cx, pcy, pr, pr * .74, 0, 0, 7); g.fill();
+      const fg = g.createRadialGradient(c.cx, top, 1, c.cx, top, w); fg.addColorStop(0, `rgba(${c1},${.5 * b})`); fg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = fg; g.fillRect(c.cx - w, top - w, w * 2, w * 2);
+      g.globalCompositeOperation = 'source-over';
+    });
+    labText(g, 'プラズマ', W / 2, 16, 11, 'rgba(225,205,255,.75)');
+  },
+  finish() {
+    const el = Math.max(.01, this.el);
+    Object.assign(state, { growth: this.growth, tempRate: this.inT[0] / el, gas: this.inT[1] / el, stability: this.inT[2] / el, timeline: this.tl.slice(), layers: this.layers.slice() });
+    return { title: '結晶が育ちました', stat: `<small>成長</small>${Math.round(this.growth * 100)}%　<small>安定度</small>${Math.round(state.stability * 100)}%`,
+      text: 'バランスが崩れると、結晶が曇ったり色づいたりします。実際の製作では、この状態を長い時間、人の目で見守り続けます。' };
+  },
+};
+
+/* ---------- STEP 5：研磨・カット ---------- */
+const fh = i => { const s = Math.sin(i * 127.1 + 3.7) * 43758.5453; return s - Math.floor(s); };
+function drawBrilliant(g, cx, cy, R, t, q) {
+  const P = (deg, r) => [cx + Math.cos(deg * Math.PI / 180) * r * R, cy + Math.sin(deg * Math.PI / 180) * r * R];
+  let k = 0;
+  const face = (pts, base) => { const b = clamp((base + .16 * (fh(k) - .5) + .12 * Math.sin(t * 1.8 + k * 1.7)) * q); k++;
+    g.fillStyle = `rgb(${mixRGB([66, 94, 128], [255, 255, 255], b).join(',')})`; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = .6; g.stroke(); };
+  for (let i = 0; i < 8; i++) { const a = i * 45;
+    face([P(a + 22.5, .74), P(a, 1), P(a + 22.5, 1)], .5); face([P(a + 22.5, .74), P(a + 22.5, 1), P(a + 45, 1)], .78);
+    face([P(a, .5), P(a - 22.5, .74), P(a, 1), P(a + 22.5, .74)], .93);
+    face([P(a, .5), P(a + 22.5, .74), P(a + 45, .5)], .66); }
+  for (let i = 0; i < 16; i++) { const a = i * 22.5; face([[cx, cy], P(a, i % 2 ? .46 : .5), P(a + 22.5, i % 2 ? .5 : .46)], i % 2 ? .98 : .58); }
+  g.beginPath(); for (let i = 0; i < 8; i++) { const p = P(i * 45, .5); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); } g.closePath(); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.stroke();
+}
+const cutStage = {
+  step: 5, title: '研磨・カット', time: CONFIG.time.cut,
+  brief() { return { title: '一面ずつ磨いて、輝きを引き出す',
+    text: '育ったばかりの結晶は、まだ輝いていません。職人が一面ずつ角度を決めて磨くことで、光を反射するカットに仕上がります。',
+    how: `動く印が金色の範囲に来たら、ボタンをタップ。${CONFIG.cut.facets}面を磨きます（${this.time}秒）。` }; },
+  setup() {
+    const n = CONFIG.cut.facets;
+    Object.assign(this, { i: 0, res: [], pos: 0, dirn: 1, pause: 0, pop: null, rs: rng(21) });
+    this.spk = Array.from({ length: 150 }, () => [this.rs() * 6.283, Math.sqrt(this.rs()), this.rs()]);
+    info.innerHTML = `<div class="mrow"><div class="track tall"><div class="zone good" id="cuGood"></div><div class="zone" id="cuZone"></div><div class="mark" id="cuMark"></div></div></div>
+      <ol class="facets" id="cuList">${Array.from({ length: n }, (_, i) => `<li>${i + 1}</li>`).join('')}</ol>`;
+    ctl.innerHTML = `<button class="btn gold" id="cuBtn" type="button">ここで磨く</button>`;
+    const b = $('#cuBtn'); b.addEventListener('pointerdown', e => { this.tap(); e.preventDefault(); });
+    b.addEventListener('keydown', e => { if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) this.tap(); });
+    this.newFacet();
+  },
+  newFacet() {
+    const C = CONFIG.cut, k = this.i / Math.max(1, C.facets - 1);
+    this.speed = lerp(C.speed[0], C.speed[1], k); this.zh = lerp(C.zoneHalf[0], C.zoneHalf[1], k); this.zc = .28 + Math.random() * .44;
+    this.pos = Math.random() < .5 ? 0 : 1; this.dirn = this.pos ? -1 : 1;
+    const z = $('#cuZone'), gd = $('#cuGood'), e = C.goodExtra;
+    z.style.left = (this.zc - this.zh) * 100 + '%'; z.style.width = this.zh * 200 + '%';
+    gd.style.left = Math.max(0, this.zc - this.zh - e) * 100 + '%'; gd.style.width = (Math.min(1, this.zc + this.zh + e) - Math.max(0, this.zc - this.zh - e)) * 100 + '%';
+  },
+  tap() {
+    if (!running || this.pause > 0 || this.i >= CONFIG.cut.facets) return;
+    const d = Math.abs(this.pos - this.zc), r = d <= this.zh ? 'perfect' : d <= this.zh + CONFIG.cut.goodExtra ? 'good' : 'miss';
+    this.res.push(r); const li = $('#cuList').children[this.i]; li.className = r; li.textContent = r === 'perfect' ? 'P' : r === 'good' ? 'G' : '–';
+    this.i++; this.pause = .45; this.pop = { r, t: 0 };
+  },
+  pointer(n) { if (n === 'pointerdown') this.tap(); },
+  key(v) { if (v) this.tap(); },
+  update(dt) {
+    if (this.pop) { this.pop.t += dt; if (this.pop.t > .8) this.pop = null; }
+    if (this.pause > 0) { this.pause -= dt; if (this.pause <= 0) { if (this.i >= CONFIG.cut.facets) { endStage(); return; } this.newFacet(); } }
+    else { this.pos += this.dirn * this.speed * dt; if (this.pos > 1) { this.pos = 1; this.dirn = -1; } if (this.pos < 0) { this.pos = 0; this.dirn = 1; } }
+    $('#cuMark').style.left = this.pos * 100 + '%';
+  },
+  draw(g, W, H, t) {
+    g.fillStyle = '#0c1119'; g.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H * .5, R = Math.min(W, H) * .36, n = CONFIG.cut.facets, wr = Math.max(W, H) * .9;
+    g.save(); g.translate(cx, cy + R * 2.6); g.rotate(running ? t * 3 : 0);
+    const wg = g.createRadialGradient(0, 0, wr * .2, 0, 0, wr); wg.addColorStop(0, '#2c323b'); wg.addColorStop(1, '#151a21'); g.fillStyle = wg; g.beginPath(); g.arc(0, 0, wr, 0, 7); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.05)'; g.lineWidth = 1; for (let r = wr * .25; r < wr; r += 7) { g.beginPath(); g.arc(0, 0, r, 0, 5.4); g.stroke(); }
+    g.restore();
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.ellipse(cx + 4, cy + R * .1, R * 1.05, R * 1.02, 0, 0, 7); g.fill();
+    const rg = g.createRadialGradient(cx - R * .3, cy - R * .3, R * .1, cx, cy, R); rg.addColorStop(0, '#dfe5e9'); rg.addColorStop(1, '#8e99a3');
+    g.beginPath(); g.arc(cx, cy, R, 0, 7); g.fillStyle = rg; g.fill();
+    this.spk.forEach(s => { g.fillStyle = `rgba(${s[2] > .5 ? '255,255,255' : '70,82,96'},.22)`; g.fillRect(cx + Math.cos(s[0]) * s[1] * R * .96, cy + Math.sin(s[0]) * s[1] * R * .96, 1.6, 1.6); });
+    const q = { perfect: 1, good: .86, miss: .62 };
+    for (let k = 0; k < this.res.length; k++) { const a0 = -Math.PI / 2 + k * Math.PI * 2 / n, a1 = a0 + Math.PI * 2 / n + .01;
+      g.save(); g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, a0, a1); g.closePath(); g.clip(); drawBrilliant(g, cx, cy, R, t, q[this.res[k]]); g.restore(); }
+    g.beginPath(); g.arc(cx, cy, R, 0, 7); g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1.2; g.stroke();
+    if (this.pop) { const a = 1 - this.pop.t / .8, lab = { perfect: 'Perfect', good: 'Good', miss: 'Miss' }[this.pop.r];
+      g.font = `500 22px ${FONT_CAP}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = `rgba(0,0,0,${a * .6})`; g.fillText(lab, cx + 1, cy - R - 16 - this.pop.t * 10 + 1);
+      g.fillStyle = this.pop.r === 'perfect' ? `rgba(232,208,150,${a})` : this.pop.r === 'good' ? `rgba(255,255,255,${a})` : `rgba(170,178,188,${a})`; g.fillText(lab, cx, cy - R - 16 - this.pop.t * 10); }
+  },
+  finish() {
+    const C = CONFIG.cut; while (this.res.length < C.facets) this.res.push('miss');
+    state.cut = this.res.slice(); state.cutScore = this.res.reduce((s, r) => s + C.score[r], 0) / C.facets;
+    const c = r => this.res.filter(x => x === r).length;
+    return { title: '磨き上がりました', stat: `<small>Perfect</small>${c('perfect')}　<small>Good</small>${c('good')}　<small>Miss</small>${c('miss')}`,
+      text: 'カットの精度が、ダイヤモンドの輝きを決めます。次は、このダイヤモンドを仕立てるジュエリーを選びます。', button: 'デザインを選ぶ' };
+  },
+};
+const STAGES = [harvestStage, extractStage, seedStage, cvdStage, cutStage];
+
+/* ============================================================
+   評価（GIA の 4C スケール表記）
+   ============================================================ */
+function compute() {
+  const G = CONFIG.grade, ci = Math.min(pick(G.harvestCap, state.harvest), pick(G.growth, state.growth));
+  const clarityS = .5 * state.purity + .5 * state.stability, colorS = .5 * state.purity + .5 * state.gas, cutS = state.cutScore;
+  const total = (ci / 6 + clarityS + colorS + cutS) / 4, hours = CONFIG.hours[ci], sp = CONFIG.hourSplit, f1 = v => (Math.round(v * 10) / 10).toString();
+  const d = new Date(), z = n => String(n).padStart(2, '0'), abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const no = `ZG-${String(d.getFullYear()).slice(2)}${z(d.getMonth() + 1)}${z(d.getDate())}-${Array.from({ length: 4 }, () => abc[Math.floor(Math.random() * abc.length)]).join('')}`;
+  const rank = pick(G.rank, total);
+  const open = { S: 'ほぼ非の打ちどころのない仕上がりです。', A: 'とても美しい仕上がりです。', B: '味わいのある、世界にひとつの仕上がりです。', C: '手間をかけた分だけ、愛着のわく一粒になりました。' }[rank];
+  const memo = [];
+  memo.push(state.stability >= .7 ? '成長中のプラズマは安定し、曇りの少ない澄んだ結晶です。' : '成長中にプラズマが揺らぎ、わずかな曇りが見られます。');
+  memo.push(state.gas >= .7 ? 'ガスのバランスが保たれ、無色に近い色あいです。' : 'ガスの偏りにより、ごく淡い色づきがあります。');
+  if (state.purity < .7) memo.push('炭素の純度がやや低く、小さな内包物の原因になりました。');
+  if (state.growth < .65) memo.push('温度が適正から外れた時間があり、結晶の成長がゆっくりでした。');
+  state.result = { ci, ct: CONFIG.carats[ci], mm: CONFIG.mm[ci], color: pick(G.color, colorS), clarity: pick(G.clarity, clarityS), cut: pick(G.cut, cutS), rank, hours,
+    hoursText: `${hours}時間（抽出${f1(hours * sp.extract)}／成長${f1(hours * sp.cvd)}／研磨${f1(hours * sp.cut)}）`,
+    date: `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`, no, memo,
+    msg: `${open}ゲームでは${hours}時間でしたが、本物は職人が${CONFIG.realLeadTime}かけて、一粒ずつ丁寧に育てます。` };
+}
+
+/* ============================================================
+   デザイン選択
+   ============================================================ */
+let dTab = 'std', colGroup = 'all';
+const full = { item: 'neck', metal: 'Pt900', color: 'white', setting: 'prong4', engrave: '' };
+const FULL_ITEMS = [['ring','リング'],['neck','ネックレス'],['brac','ブレスレット'],['tie','タイタック']];
+const FULL_SET = [['prong4','4本爪'],['prong6','6本爪'],['bezel','伏せ込み'],['halo','取り巻き']];
+const stdImg = (id, color) => `img/${id}_${id === 'b02' && color === 'white' ? 'gold' : color}.jpg`;
+function fullImg() {
+  const c = full.metal === 'Pt900' ? 'white' : full.color, s = full.setting;
+  if (full.item === 'neck') return stdImg({ prong4: 'n01', prong6: 'n02', bezel: 'n05', halo: 'n07' }[s], c);
+  if (full.item === 'ring') return s === 'bezel' ? stdImg('r01', c) : s === 'halo' ? 'img/ZT-RI-004.jpg' : 'img/ZT-RI-018.jpg';
+  if (full.item === 'brac') return stdImg('b01', c);
+  return s === 'halo' ? 'img/ZT-AC-003.jpg' : 'img/ZT-AC-006.jpg';
+}
+const label = (list, key) => (list.find(x => x[0] === key) || [])[1];
+function setFullDesign() {
+  const c = full.metal === 'Pt900' ? 'white' : full.color;
+  state.design = { kind: 'full', name: `フルオーダー ${label(FULL_ITEMS, full.item)}`, code: '', img: fullImg(),
+    detail: `${full.metal} ${label(METAL_COLORS, c)}・${label(FULL_SET, full.setting)}${full.engrave.trim() ? `・刻印「${full.engrave.trim()}」` : ''}`, ref: true };
+}
+function openDesign() {
+  compute(); cur = null; show('s-design'); setHud(5, false);
+  $('#dName').textContent = petName(); $('#dCt').textContent = state.result.ct.toFixed(2); $('#dMm').textContent = state.result.mm.toFixed(1);
+  dTab = 'std'; state.design = null; renderDesign();
+}
+function renderDesign() {
+  const p = $('#dPanel');
+  document.querySelectorAll('#dTabs .tab').forEach(b => b.setAttribute('aria-selected', b.dataset.t === dTab));
+  if (dTab === 'std') {
+    p.innerHTML = `<div class="sw"><span>地金の色</span>${METAL_COLORS.map(([k, l, c]) => `<button class="swb" type="button" data-c="${k}" aria-pressed="${state.metal === k}"><i style="background:${c}"></i>${l}</button>`).join('')}</div>
+      <div class="grid">${STD.map(([id, no, name]) => `<button class="card" type="button" data-id="${id}" aria-pressed="${!!state.design && state.design.kind === 'std' && state.design.id === id}"><img loading="lazy" src="${stdImg(id, state.metal)}" alt=""><span class="cn">${name}</span><span class="cc">${no}</span></button>`).join('')}</div>`;
+    p.querySelectorAll('.swb').forEach(b => b.onclick = () => { state.metal = b.dataset.c; if (state.design && state.design.kind === 'std') selectStd(state.design.id); renderDesign(); });
+    p.querySelectorAll('.card').forEach(b => b.onclick = () => { selectStd(b.dataset.id); markCards(p, b); });
+  } else if (dTab === 'col') {
+    const list = COLLECTION.filter(c => colGroup === 'all' || c.group === colGroup); let sub = '';
+    p.innerHTML = `<div class="chips">${COL_GROUPS.map(([k, l]) => `<button class="fchip" type="button" data-g="${k}" aria-pressed="${colGroup === k}">${l}</button>`).join('')}</div>
+      <div class="grid">${list.map(c => { const h = c.sub !== sub ? `<p class="sub">${c.sub}</p>` : ''; sub = c.sub;
+        return `${h}<button class="card" type="button" data-code="${c.code}" aria-pressed="${!!state.design && state.design.kind === 'col' && state.design.id === c.code}"><img loading="lazy" src="img/${c.code}.jpg" alt=""><span class="cn">${c.name}</span><span class="cc">${c.code.startsWith('BE-') ? 'デザインオーダー例' : c.code}</span></button>`; }).join('')}</div>`;
+    p.querySelectorAll('.fchip').forEach(b => b.onclick = () => { colGroup = b.dataset.g; renderDesign(); });
+    p.querySelectorAll('.card').forEach(b => b.onclick = () => { const c = COLLECTION.find(x => x.code === b.dataset.code);
+      state.design = { kind: 'col', id: c.code, name: c.name, code: c.code.startsWith('BE-') ? '' : c.code, img: `img/${c.code}.jpg`, detail: c.sub }; markCards(p, b); });
+  } else {
+    const seg = (key, list, cls) => `<div class="seg ${cls || ''}">${list.map(([k, l]) => `<button class="opt" type="button" data-k="${key}" data-v="${k}" aria-pressed="${full[key] === k}" ${key === 'color' && full.metal === 'Pt900' && k !== 'white' ? 'disabled' : ''}>${l}</button>`).join('')}</div>`;
+    p.innerHTML = `<div class="fo">
+      <div class="field"><span class="lab">アイテム</span>${seg('item', FULL_ITEMS, 'c2')}</div>
+      <div class="field"><span class="lab">地金</span>${seg('metal', [['Pt900','Pt900'],['K18','K18'],['K10','K10']], 'c3')}</div>
+      <div class="field"><span class="lab">地金の色${full.metal === 'Pt900' ? '（Pt900はホワイトのみ）' : ''}</span>${seg('color', METAL_COLORS, 'c3')}</div>
+      <div class="field"><span class="lab">石の留め方</span>${seg('setting', FULL_SET)}</div>
+      <div class="field"><label for="engrave">刻印（任意）</label><input class="inp" id="engrave" type="text" maxlength="16" placeholder="例：MOCO 2026" autocomplete="off" value="${esc(full.engrave)}"></div>
+      <div class="fo-prev"><img src="${fullImg()}" alt=""><p>写真は、選んだ組み合わせに近い実際の商品です（参考イメージ）。フルオーダーの可否と価格は、ご相談のうえで確定します。</p></div></div>`;
+    p.querySelectorAll('.opt').forEach(b => b.onclick = () => { full[b.dataset.k] = b.dataset.v; if (full.metal === 'Pt900') full.color = 'white'; setFullDesign(); renderDesign(); });
+    $('#engrave').oninput = e => { full.engrave = e.target.value; setFullDesign(); updateSel(); };
+    setFullDesign();
+  }
+  updateSel();
+}
+function selectStd(id) { const s = STD.find(x => x[0] === id); state.design = { kind: 'std', id, name: s[2], code: s[1], img: stdImg(id, state.metal), detail: `地金の色：${label(METAL_COLORS, state.metal)}` }; }
+function markCards(p, b) { p.querySelectorAll('.card').forEach(c => c.setAttribute('aria-pressed', c === b)); updateSel(); }
+function updateSel() { const d = state.design; $('#dSel').textContent = d ? `選択中：${d.name}${d.code ? '（' + d.code + '）' : ''}` : 'デザインを1つ選んでください'; $('#dGo').disabled = !d; }
+$('#dTabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (!b) return; dTab = b.dataset.t; if (dTab !== 'full' && state.design && state.design.kind === 'full') state.design = null; renderDesign(); });
+$('#dGo').addEventListener('click', () => { if (state.design) openResult(); });
+
+/* ============================================================
+   結果：鑑定書＋個体分析書
+   ============================================================ */
+const FOOT1 = '本物の ZUTTO Diamond の品質基準：COLOR E〜J／CLARITY VS2 以上／CUT Very Good 以上。';
+const FOOT2 = 'この鑑定書はゲーム内で発行した疑似鑑定です。GIA など鑑定機関による実際の鑑定結果ではありません。';
+function openResult() {
+  const r = state.result, d = state.design, name = petName(), sp = label(SPECIES, state.species), m = MAT();
+  show('s-result'); setHud(6, false);
+  $('#rName').textContent = name; $('#rImg').src = d.img;
+  $('#rCap').innerHTML = `${esc(d.name)}${d.code ? `<span>${esc(d.code)}</span>` : ''}`;
+  $('#rNote').textContent = (d.ref ? '写真は、選んだ組み合わせに近い実際の商品です（参考イメージ）。' : '写真は実際の商品デザインです（イメージ）。') + 'ダイヤモンドの大きさ・品質は、ゲームの結果を反映したものではありません。';
+  const dLab = `${esc(d.name)}${d.code ? '（' + esc(d.code) + '）' : ''}`;
+  $('#certFront').innerHTML = `<div class="cert-in">
+    <img class="cert-logo" src="logo.png" alt="ZUTTO Diamond">
+    <div><p class="cap">Diamond Grading Report</p><h3>ダイヤモンド鑑定書<small>ゲーム版</small></h3></div>
+    <p class="cert-pet"><b>${esc(name)}</b><span>${sp}・素材：${m.label}</span></p>
+    <div class="cert-main"><img class="cert-ph" src="${d.img}" alt="">
+      <dl class="c4"><div><dt>CARAT</dt><dd>${r.ct.toFixed(2)}<small>ct</small></dd></div><div><dt>COLOR</dt><dd>${r.color}</dd></div><div><dt>CLARITY</dt><dd>${r.clarity}</dd></div><div><dt>CUT</dt><dd>${r.cut}</dd></div></dl></div>
+    <dl class="rows"><div><dt>デザイン</dt><dd>${dLab}<br><span style="color:var(--ink2);font-size:12.5px">${esc(d.detail || '')}</span></dd></div>
+      <div><dt>総合ランク</dt><dd><b class="rank">${r.rank}</b></dd></div><div><dt>製作時間</dt><dd>${r.hoursText}</dd></div>
+      <div><dt>完成日</dt><dd>${r.date}</dd></div><div><dt>証明番号</dt><dd>${r.no}</dd></div></dl>
+    <p class="cert-msg">${esc(r.msg)}</p><p class="cert-foot">${FOOT1}<br>${FOOT2}</p></div>`;
+  const tl = state.timeline.length ? state.timeline : [1], pts = tl.map((v, i) => `${(10 + i / Math.max(1, tl.length - 1) * 280).toFixed(1)},${(78 - v * 62).toFixed(1)}`).join(' ');
+  const cutChips = state.cut.map(c => `<li class="${c}">${c === 'perfect' ? 'P' : c === 'good' ? 'G' : '–'}</li>`).join('');
+  $('#certBack').innerHTML = `<div class="cert-in">
+    <div><p class="cap">Individual Analysis Report</p><h3>個体分析書<small>ゲーム版</small></h3></div>
+    <p class="cert-pet"><b>${esc(name)}</b><span>証明番号 ${r.no}</span></p>
+    <dl class="rows"><div><dt>お預かりした素材</dt><dd>${state.material === 'hair' ? `毛・手のひら ${state.harvest.toFixed(1)} 杯分` : `${m.word}（お預かり済み）`}</dd></div>
+      <div><dt>抽出した炭素の純度</dt><dd>${Math.round(state.purity * 100)}%</dd></div>
+      <div><dt>結晶の成長</dt><dd>${Math.round(state.growth * 100)}%（成長にかけた時間 ${(Math.round(r.hours * CONFIG.hourSplit.cvd * 10) / 10)}時間）</dd></div>
+      <div><dt>プラズマの安定度</dt><dd>${Math.round(state.stability * 100)}%</dd></div>
+      <div><dt>ガスのバランス</dt><dd>${Math.round(state.gas * 100)}%</dd></div></dl>
+    <div style="width:100%;text-align:left"><p class="cap" style="margin-bottom:4px">成長中の安定度の推移</p>
+      <svg class="chart" viewBox="0 0 300 92" role="img" aria-label="成長中の安定度の推移グラフ"><rect x="10" y="16" width="280" height="${(62 * CONFIG.cvd.zoneHalf * 2).toFixed(1)}" fill="#F3ECDB"/><line x1="10" y1="78" x2="290" y2="78" stroke="rgba(30,45,69,.3)" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#1E2D45" stroke-width="1.6" stroke-linejoin="round"/><text x="10" y="90" font-size="8" fill="#8A93A1">開始</text><text x="290" y="90" font-size="8" fill="#8A93A1" text-anchor="end">終了</text><text x="290" y="12" font-size="8" fill="#A4874B" text-anchor="end">金色の帯＝安定</text></svg></div>
+    <dl class="rows"><div><dt>研磨の精度（6面）</dt><dd><ol class="facets" style="justify-content:flex-end">${cutChips}</ol></dd></div></dl>
+    <div style="width:100%;text-align:left"><p class="cap" style="margin-bottom:4px">結晶の特徴</p><ul class="memo">${r.memo.map(x => `<li>${x}</li>`).join('')}</ul></div>
+    <p class="cert-foot">${FOOT2}</p></div>`;
+  const L = CONFIG.links;
+  $('#cta').innerHTML = `<h3>本物の${esc(name)}のダイヤモンドを考えてみる</h3>
+    <a class="main" href="${L.simulator}" target="_blank" rel="noopener"><span>公式シミュレーターで見積もる<small>大きさとデザインを選んで、価格の目安を確認</small></span></a>
+    <a href="${L.contact}" target="_blank" rel="noopener"><span>資料請求・お問い合わせ<small>お問い合わせフォームが開きます</small></span></a>
+    <a href="${L.line}" target="_blank" rel="noopener"><span>公式LINEで相談する<small>毛の量が足りるかどうかも、こちらで確認できます</small></span></a>`;
+  setCertTab('front');
+}
+function setCertTab(t) { document.querySelectorAll('#rTabs .tab').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t)); $('#certFront').hidden = t !== 'front'; $('#certBack').hidden = t !== 'back'; }
+$('#rTabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) setCertTab(b.dataset.t); });
+
+/* ---------- 鑑定書を画像（PNG）にする ---------- */
+const loadImg = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+function wrapText(g, text, x, y, maxW, lh) { let line = ''; for (const ch of text) { if (g.measureText(line + ch).width > maxW && line) { g.fillText(line, x, y); y += lh; line = ch; } else line += ch; } if (line) { g.fillText(line, x, y); y += lh; } return y; }
+function fitText(g, text, maxW) { if (g.measureText(text).width <= maxW) return text; while (text.length > 1 && g.measureText(text + '…').width > maxW) text = text.slice(0, -1); return text + '…'; }
+async function makePng() {
+  const r = state.result, d = state.design, name = petName(), Wc = 1080, Hc = 1680;
+  const dLab = d.name + (d.code ? `（${d.code}）` : ''), sub = `${label(SPECIES, state.species)}・素材：${MAT().label}`;
+  const all = name + dLab + sub + r.msg + r.hoursText + r.date + FOOT1 + FOOT2 + 'ダイヤモンド鑑定書ゲーム版デザイン総合ランク製作時間完成日証明番号';
+  try { await Promise.all([document.fonts.load(`600 40px ${FONT_DISP}`, all), document.fonts.load(`500 24px ${FONT_BODY}`, all), document.fonts.load(`500 24px ${FONT_CAP}`, 'DIAMOND GRADING REPORT')]); } catch (_) {}
+  const [logo, photo] = await Promise.all([loadImg('logo.png'), loadImg(d.img)]);
+  const c = document.createElement('canvas'); c.width = Wc; c.height = Hc; const g = c.getContext('2d');
+  g.fillStyle = '#FCFBF8'; g.fillRect(0, 0, Wc, Hc);
+  g.strokeStyle = '#C9B27A'; g.lineWidth = 3; g.strokeRect(36, 36, Wc - 72, Hc - 72); g.lineWidth = 1; g.strokeRect(52, 52, Wc - 104, Hc - 104);
+  if (logo) { const lw = 400, lh = lw * logo.height / logo.width; g.drawImage(logo, (Wc - lw) / 2, 100, lw, lh); }
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#A4874B'; g.font = `500 24px ${FONT_CAP}`; try { g.letterSpacing = '6px'; } catch (_) {} g.fillText('DIAMOND GRADING REPORT', Wc / 2, 268); try { g.letterSpacing = '0px'; } catch (_) {}
+  g.fillStyle = '#1E2D45'; g.font = `600 48px ${FONT_DISP}`; g.fillText('ダイヤモンド鑑定書', Wc / 2, 334);
+  g.fillStyle = '#5B6779'; g.font = `500 22px ${FONT_BODY}`; g.fillText('ゲーム版', Wc / 2, 370);
+  g.fillStyle = '#1E2D45'; g.font = `600 60px ${FONT_DISP}`; g.fillText(fitText(g, name, Wc - 220), Wc / 2, 470);
+  g.fillStyle = '#5B6779'; g.font = `500 24px ${FONT_BODY}`; g.fillText(sub, Wc / 2, 512);
+  const px = 96, py = 560, ps = 430; g.fillStyle = '#fff'; g.fillRect(px, py, ps, ps); if (photo) g.drawImage(photo, px, py, ps, ps);
+  g.strokeStyle = 'rgba(30,45,69,.18)'; g.lineWidth = 1; g.strokeRect(px + .5, py + .5, ps - 1, ps - 1);
+  const cxs = 580; g.textAlign = 'left';
+  [['CARAT', r.ct.toFixed(2) + ' ct'], ['COLOR', r.color], ['CLARITY', r.clarity], ['CUT', r.cut]].forEach(([k, v], i) => { const y = py + 30 + i * 108;
+    g.fillStyle = '#A4874B'; g.font = `500 21px ${FONT_CAP}`; g.fillText(k, cxs, y); g.fillStyle = '#1E2D45'; g.font = `600 50px ${FONT_DISP}`; g.fillText(v, cxs, y + 56);
+    g.fillStyle = 'rgba(30,45,69,.14)'; g.fillRect(cxs, y + 74, Wc - 96 - cxs, 1); });
+  let y = 1060;
+  [['デザイン', dLab], ['総合ランク', r.rank], ['製作時間', r.hoursText], ['完成日', r.date], ['証明番号', r.no]].forEach(([k, v]) => {
+    g.textAlign = 'left'; g.fillStyle = '#5B6779'; g.font = `500 24px ${FONT_BODY}`; g.fillText(k, 96, y);
+    g.textAlign = 'right'; g.fillStyle = '#1E2D45'; g.font = `500 26px ${FONT_BODY}`; g.fillText(fitText(g, v, 690), Wc - 96, y);
+    g.fillStyle = 'rgba(30,45,69,.12)'; g.fillRect(96, y + 20, Wc - 192, 1); y += 60; });
+  y += 20; g.textAlign = 'left'; g.fillStyle = '#1E2D45'; g.font = `500 29px ${FONT_DISP}`; y = wrapText(g, r.msg, 96, y, Wc - 192, 48);
+  y += 18; g.fillStyle = '#8A93A1'; g.font = `400 19px ${FONT_BODY}`; y = wrapText(g, FOOT1, 96, y, Wc - 192, 31); wrapText(g, FOOT2, 96, y, Wc - 192, 31);
+  return c.toDataURL('image/png');
+}
+$('#savePng').addEventListener('click', async () => {
+  const b = $('#savePng'); b.disabled = true; b.textContent = '画像を作成しています…';
+  try { $('#sheetImg').src = await makePng(); $('#sheet').hidden = false; } catch (_) { b.textContent = '画像を作成できませんでした。もう一度お試しください'; b.disabled = false; return; }
+  b.disabled = false; b.textContent = '鑑定書を画像にして保存する';
+});
+$('#sheetClose').addEventListener('click', () => { $('#sheet').hidden = true; });
+
+/* ============================================================
+   はじまり
+   ============================================================ */
+function segInit(el, list, key, after) {
+  const paint = () => { el.innerHTML = list.map(([k, l]) => `<button class="opt" type="button" data-v="${k}" aria-pressed="${state[key] === k}">${l}</button>`).join(''); if (after) after(); };
+  el.addEventListener('click', e => { const b = e.target.closest('.opt'); if (!b) return; state[key] = b.dataset.v; paint(); });
+  paint();
+}
+segInit($('#segSpecies'), SPECIES, 'species');
+segInit($('#segMaterial'), Object.entries(CONFIG.material).map(([k, v]) => [k, v.label]), 'material', () => {
+  $('#matHint').textContent = state.material === 'hair' ? '毛は、炭素をいちばん取り出しやすい素材です。ブラッシングで集めるところから体験します。'
+    : `${MAT().label}は毛にくらべて炭素を取り出しにくい素材です。採取は省略し、このあとの工程が少し難しくなります。`; });
+$('#startBtn').addEventListener('click', () => show('s-intro'));
+$('#introGo').addEventListener('click', () => { state.name = $('#petName').value; resetRun(); startStage(0); });
+$('#petName').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+$('#again').addEventListener('click', () => { cur = null; show('s-intro'); });
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
