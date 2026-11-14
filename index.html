@@ -333,7 +333,7 @@ const CONFIG = {
     line:      'https://lin.ee/6tNAPNH',
   },
   realLeadTime: '約1ヶ月半〜3ヶ月',          // 鑑定書の「飼い主への一言」に出る実際の製作期間の目安
-  time: { harvest: 12, extract: 10, cvd: 10 },   // 各ステージの秒数
+  time: { harvest: 12, extract: 10, cvd: 10, cut: 15 },   // 各ステージの秒数
   material: {                               // 素材ごとの難易度補正
     hair:  { label: '毛', word: '毛',   zone: 1.0, disturb: 1.0, purityRate: 1.0 },
     bone:  { label: '骨', word: 'お骨', zone: 0.7, disturb: 1.5, purityRate: 0.85 },
@@ -344,8 +344,8 @@ const CONFIG = {
   extract: { zoneCenter: .62, zoneHalf: .17, heat: .7, cool: .5, damping: 2.2,
              kickEvery: [3, 5], kick: .22, fullAt: .6 },   // fullAt＝適正に保つべき時間の割合（これで純度100%）
   cvd:     { zoneHalf: .24, drift: [.022, .042], step: .09, flip: [2, 4], flipProb: .5, growthBoost: 1.15 },
-  cut:     { facets: 6, sceneSeconds: 9 },   // 研磨はゲームではなく映像シーン（秒）
-  cutGrade: 'Excellent',                    // カットはゲームの結果に左右されない（ZUTTOの基準は Very Good 以上）
+  cut:     { facets: 6, sceneSeconds: 9, speed: [.7, 1.1], zoneHalf: [.18, .13], goodExtra: .08,
+             score: { perfect: 1, good: .72, miss: .3 } },
   carats: [0.10, 0.15, 0.20, 0.30, 0.50, 0.70, 1.00],
   mm:     [3.0, 3.4, 3.8, 4.3, 5.1, 5.7, 6.4],
   hours:  [8, 10, 11, 12, 14, 16, 18],      // ゲーム内の製作時間（カラット別）
@@ -353,6 +353,7 @@ const CONFIG = {
   grade: {
     color:   [[.9,'E'],[.78,'F'],[.64,'G'],[.5,'H'],[.36,'I'],[0,'J']],   // クリア（無色〜ほぼ無色）の中だけ。ZUTTOの品質基準 E〜J
     clarity: [[.97,'IF'],[.88,'VVS1'],[.75,'VVS2'],[.6,'VS1'],[0,'VS2']],   // ZUTTOの基準 VS2 以上の範囲だけ
+    cut:     [[.88,'Excellent'],[.72,'Very Good'],[.55,'Good'],[.38,'Fair'],[0,'Poor']],
     rank:    [[.88,'S'],[.75,'A'],[.6,'B'],[0,'C']],
   },
 };
@@ -486,7 +487,7 @@ function loop(ts) {
   if (cur && screenId === 's-stage') {
     if (running) {
       cur.update(dt);
-      if (running && cur.time) { tLeft -= dt; if (tLeft <= 0) { tLeft = 0; endStage(); } }
+      if (running && cur.time && !cur.hold) { tLeft -= dt; if (tLeft <= 0) { tLeft = 0; endStage(); } }
     }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     cur.draw(g, W, H, ts / 1000);
@@ -823,25 +824,35 @@ function drawBrilliant(g, cx, cy, R, t, q) {
   g.beginPath(); for (let i = 0; i < 8; i++) { const p = P(i * 45, .5); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); } g.closePath(); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.stroke();
 }
 const cutStage = {
-  step: 5, title: '研磨・カット', time: 0,
-  brief() { return { title: '一面ずつ磨いて、輝きを引き出す',
-    text: '育ったばかりの結晶は、まだ輝いていません。面を一つずつ、角度を決めながら磨くことで、光を反射するカットに仕上がります。ここは操作なしで、磨かれていく様子をご覧ください。', button: '見てみる' }; },
-  setup() {
+  step: 5, title: '研磨・カット', time: CONFIG.time.cut, hold: true,
+  brief() { return { title: '研磨の様子を見て、一面ずつ磨く',
+    text: '育ったばかりの結晶は、まだ輝いていません。面を一つずつ、角度を決めながら磨くことで、光を反射するカットに仕上がります。まず、磨かれていく様子をご覧ください。そのあとで、あなたも磨いてみましょう。', button: '見てみる' }; },
+  setup() { this.hold = true; this.sSetup(); },
+  pointer(n) { if (this.phase === 'game' && n === 'pointerdown') this.tap(); },
+  key(v) { if (this.phase === 'game' && v) this.tap(); },
+  update(dt) { if (this.phase === 'game') this.gUpdate(dt); else if (this.phase === 'scene') this.sUpdate(dt); },
+  draw(g, W, H, t) { if (this.phase === 'game') this.gDraw(g, W, H, t); else this.sDraw(g, W, H, t); },
+  sSetup() {
     const C = CONFIG.cut;
-    Object.assign(this, { t: 0, dur: C.sceneSeconds, rs: rng(21), done: false });
+    Object.assign(this, { t: 0, dur: C.sceneSeconds, rs: rng(21), phase: 'scene' });
     this.spk = Array.from({ length: 150 }, () => [this.rs() * 6.283, Math.sqrt(this.rs()), this.rs()]);
     info.innerHTML = `<p class="hint" id="cuNote"></p><div class="track"><div class="fill" id="cuFill"></div></div>`;
     ctl.innerHTML = `<button class="btn ghost" id="cuSkip" type="button">とばす</button>`;
-    $('#cuSkip').addEventListener('click', () => { if (running) endStage(); });
+    $('#cuSkip').addEventListener('click', () => { if (running && this.phase === 'scene') this.toGame(); });
   },
-  update(dt) {
+  sUpdate(dt) {
     const n = CONFIG.cut.facets; this.t += dt;
     const k = Math.min(n - 1, Math.floor(this.t / (this.dur / n)));
     $('#cuNote').textContent = this.t >= this.dur ? '磨き上がりました' : `いま磨いている面：${k + 1} / ${n}`;
     $('#cuFill').style.width = (clamp(this.t / this.dur) * 100) + '%';
-    if (this.t >= this.dur + .9) endStage();
+    if (this.t >= this.dur + .9) this.toGame();
   },
-  draw(g, W, H, t) {
+  toGame() {
+    if (this.phase !== 'scene') return; this.phase = 'between'; running = false;
+    overlay(`<p class="cap">Step 5 ・ 研磨・カット</p><h3>つぎは、あなたが磨く番です</h3><p>磨かれていく様子は、こんな感じです。今度は、あなたが一面ずつ角度を決めて磨いてみましょう。</p><p class="how"><b>あそびかた</b>動く印が金色の範囲に来たら、ボタンをタップ。${CONFIG.cut.facets}面を磨きます（${this.time}秒）。</p>`,
+      '磨きはじめる', () => { this.gSetup(); this.phase = 'game'; this.hold = false; tLeft = this.time; running = true; });
+  },
+  sDraw(g, W, H, t) {
     g.fillStyle = '#0c1119'; g.fillRect(0, 0, W, H);
     const cx = W / 2, cy = H * .5, R = Math.min(W, H) * .36, n = CONFIG.cut.facets, wr = Math.max(W, H) * .9;
     const per = this.dur / n, fin = this.t >= this.dur, prog = clamp(this.t / this.dur) * n, k = Math.floor(prog), fr = prog - k;
@@ -873,10 +884,62 @@ const cutStage = {
       g.beginPath(); g.moveTo(-22 * a, 0); g.lineTo(22 * a, 0); g.moveTo(0, -22 * a); g.lineTo(0, 22 * a); g.stroke(); g.restore(); }
     labText(g, '研磨盤の上で、一面ずつ磨いています', W / 2, 18, 12.5, 'rgba(225,232,242,.85)');
   },
+  gSetup() {
+    const n = CONFIG.cut.facets;
+    Object.assign(this, { i: 0, res: [], pos: 0, dirn: 1, pause: 0, pop: null, rs: rng(21) });
+    this.spk = Array.from({ length: 150 }, () => [this.rs() * 6.283, Math.sqrt(this.rs()), this.rs()]);
+    info.innerHTML = `<div class="mrow"><div class="track tall"><div class="zone good" id="cuGood"></div><div class="zone" id="cuZone"></div><div class="mark" id="cuMark"></div></div></div>
+      <ol class="facets" id="cuList">${Array.from({ length: n }, (_, i) => `<li>${i + 1}</li>`).join('')}</ol>`;
+    ctl.innerHTML = `<button class="btn gold" id="cuBtn" type="button">ここで磨く</button>`;
+    const b = $('#cuBtn'); b.addEventListener('pointerdown', e => { this.tap(); e.preventDefault(); });
+    b.addEventListener('keydown', e => { if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) this.tap(); });
+    this.newFacet();
+  },
+  newFacet() {
+    const C = CONFIG.cut, k = this.i / Math.max(1, C.facets - 1);
+    this.speed = lerp(C.speed[0], C.speed[1], k); this.zh = lerp(C.zoneHalf[0], C.zoneHalf[1], k); this.zc = .28 + Math.random() * .44;
+    this.pos = Math.random() < .5 ? 0 : 1; this.dirn = this.pos ? -1 : 1;
+    const z = $('#cuZone'), gd = $('#cuGood'), e = C.goodExtra;
+    z.style.left = (this.zc - this.zh) * 100 + '%'; z.style.width = this.zh * 200 + '%';
+    gd.style.left = Math.max(0, this.zc - this.zh - e) * 100 + '%'; gd.style.width = (Math.min(1, this.zc + this.zh + e) - Math.max(0, this.zc - this.zh - e)) * 100 + '%';
+  },
+  tap() {
+    if (!running || this.pause > 0 || this.i >= CONFIG.cut.facets) return;
+    const d = Math.abs(this.pos - this.zc), r = d <= this.zh ? 'perfect' : d <= this.zh + CONFIG.cut.goodExtra ? 'good' : 'miss';
+    this.res.push(r); const li = $('#cuList').children[this.i]; li.className = r; li.textContent = r === 'perfect' ? 'P' : r === 'good' ? 'G' : '–';
+    this.i++; this.pause = .45; this.pop = { r, t: 0 };
+  },
+  gUpdate(dt) {
+    if (this.pop) { this.pop.t += dt; if (this.pop.t > .8) this.pop = null; }
+    if (this.pause > 0) { this.pause -= dt; if (this.pause <= 0) { if (this.i >= CONFIG.cut.facets) { endStage(); return; } this.newFacet(); } }
+    else { this.pos += this.dirn * this.speed * dt; if (this.pos > 1) { this.pos = 1; this.dirn = -1; } if (this.pos < 0) { this.pos = 0; this.dirn = 1; } }
+    $('#cuMark').style.left = this.pos * 100 + '%';
+  },
+  gDraw(g, W, H, t) {
+    g.fillStyle = '#0c1119'; g.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H * .5, R = Math.min(W, H) * .36, n = CONFIG.cut.facets, wr = Math.max(W, H) * .9;
+    g.save(); g.translate(cx, cy + R * 2.6); g.rotate(running ? t * 3 : 0);
+    const wg = g.createRadialGradient(0, 0, wr * .2, 0, 0, wr); wg.addColorStop(0, '#2c323b'); wg.addColorStop(1, '#151a21'); g.fillStyle = wg; g.beginPath(); g.arc(0, 0, wr, 0, 7); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.05)'; g.lineWidth = 1; for (let r = wr * .25; r < wr; r += 7) { g.beginPath(); g.arc(0, 0, r, 0, 5.4); g.stroke(); }
+    g.restore();
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.ellipse(cx + 4, cy + R * .1, R * 1.05, R * 1.02, 0, 0, 7); g.fill();
+    const rg = g.createRadialGradient(cx - R * .3, cy - R * .3, R * .1, cx, cy, R); rg.addColorStop(0, '#dfe5e9'); rg.addColorStop(1, '#8e99a3');
+    g.beginPath(); g.arc(cx, cy, R, 0, 7); g.fillStyle = rg; g.fill();
+    this.spk.forEach(s => { g.fillStyle = `rgba(${s[2] > .5 ? '255,255,255' : '70,82,96'},.22)`; g.fillRect(cx + Math.cos(s[0]) * s[1] * R * .96, cy + Math.sin(s[0]) * s[1] * R * .96, 1.6, 1.6); });
+    const q = { perfect: 1, good: .86, miss: .62 };
+    for (let k = 0; k < this.res.length; k++) { const a0 = -Math.PI / 2 + k * Math.PI * 2 / n, a1 = a0 + Math.PI * 2 / n + .01;
+      g.save(); g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, a0, a1); g.closePath(); g.clip(); drawBrilliant(g, cx, cy, R, t, q[this.res[k]]); g.restore(); }
+    g.beginPath(); g.arc(cx, cy, R, 0, 7); g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1.2; g.stroke();
+    if (this.pop) { const a = 1 - this.pop.t / .8, lab = { perfect: 'Perfect', good: 'Good', miss: 'Miss' }[this.pop.r];
+      g.font = `500 22px ${FONT_CAP}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = `rgba(0,0,0,${a * .6})`; g.fillText(lab, cx + 1, cy - R - 16 - this.pop.t * 10 + 1);
+      g.fillStyle = this.pop.r === 'perfect' ? `rgba(232,208,150,${a})` : this.pop.r === 'good' ? `rgba(255,255,255,${a})` : `rgba(170,178,188,${a})`; g.fillText(lab, cx, cy - R - 16 - this.pop.t * 10); }
+  },
   finish() {
-    state.cut = []; state.cutScore = 1;
-    return { title: '磨き上がりました', stat: `<small>カット</small>${CONFIG.cutGrade}`,
-      text: '面の角度がそろうほど、光がきれいに返ってきて、ダイヤモンドは強く輝きます。次は、このダイヤモンドを仕立てるジュエリーを選びます。', button: 'デザインを選ぶ' };
+    const C = CONFIG.cut; while (this.res.length < C.facets) this.res.push('miss');
+    state.cut = this.res.slice(); state.cutScore = this.res.reduce((s, r) => s + C.score[r], 0) / C.facets;
+    const c = r => this.res.filter(x => x === r).length;
+    return { title: '磨き上がりました', stat: `<small>Perfect</small>${c('perfect')}　<small>Good</small>${c('good')}　<small>Miss</small>${c('miss')}`,
+      text: 'カットの精度が、ダイヤモンドの輝きを決めます。次は、このダイヤモンドを仕立てるジュエリーを選びます。', button: 'デザインを選ぶ' };
   },
 };
 const STAGES = [harvestStage, extractStage, seedStage, cvdStage, cutStage];
@@ -886,8 +949,8 @@ const STAGES = [harvestStage, extractStage, seedStage, cvdStage, cutStage];
    ============================================================ */
 function compute() {
   const G = CONFIG.grade, ci = state.size;
-  const clarityS = .4 * state.purity + .4 * state.stability + .2 * state.gas, colorS = .5 * state.purity + .5 * state.gas;
-  const total = clarityS, hours = CONFIG.hours[ci], sp = CONFIG.hourSplit, f1 = v => (Math.round(v * 10) / 10).toString();
+  const clarityS = .4 * state.purity + .4 * state.stability + .2 * state.gas, colorS = .5 * state.purity + .5 * state.gas, cutS = state.cutScore;
+  const total = (clarityS + cutS) / 2, hours = CONFIG.hours[ci], sp = CONFIG.hourSplit, f1 = v => (Math.round(v * 10) / 10).toString();
   const d = new Date(), z = n => String(n).padStart(2, '0'), abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const no = `ZG-${String(d.getFullYear()).slice(2)}${z(d.getMonth() + 1)}${z(d.getDate())}-${Array.from({ length: 4 }, () => abc[Math.floor(Math.random() * abc.length)]).join('')}`;
   const rank = pick(G.rank, total);
@@ -898,7 +961,7 @@ function compute() {
   memo.push(state.gas >= .7 ? 'ガスのバランスが保たれ、小さな内包物の少ない結晶です。' : 'ガスの偏りにより、ごく小さな内包物がわずかに見られます。');
   if (state.purity < .7) memo.push('炭素の純度がやや低く、小さな内包物の原因になりました。');
   if (state.growth < .65) memo.push('温度が適正から外れた時間があり、結晶の成長がゆっくりでした。');
-  state.result = { ci, ct: CONFIG.carats[ci], mm: CONFIG.mm[ci], color: pick(G.color, colorS), clarity: pick(G.clarity, clarityS), cut: CONFIG.cutGrade, rank, hours,
+  state.result = { ci, ct: CONFIG.carats[ci], mm: CONFIG.mm[ci], color: pick(G.color, colorS), clarity: pick(G.clarity, clarityS), cut: pick(G.cut, cutS), rank, hours,
     hoursText: `${hours}時間（抽出${f1(hours * sp.extract)}／成長${f1(hours * sp.cvd)}／研磨${f1(hours * sp.cut)}）`,
     date: `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`, no, memo,
     msg: `${open}ゲームでは${hours}時間でしたが、本物は職人が${CONFIG.realLeadTime}かけて、一粒ずつ丁寧に育てます。` };
@@ -989,6 +1052,7 @@ function openResult() {
       <div><dt>総合ランク</dt><dd><b class="rank">${r.rank}</b></dd></div><div><dt>製作時間</dt><dd>${r.hoursText}</dd></div>
       <div><dt>完成日</dt><dd>${r.date}</dd></div><div><dt>証明番号</dt><dd>${r.no}</dd></div></dl>
     <p class="cert-msg">${esc(r.msg)}</p><p class="cert-foot">${FOOT1}<br>${FOOT2}</p></div>`;
+  const cutChips = state.cut.map(c => `<li class="${c}">${c === 'perfect' ? 'P' : c === 'good' ? 'G' : '–'}</li>`).join('');
   const tl = state.timeline.length ? state.timeline : [1], pts = tl.map((v, i) => `${(10 + i / Math.max(1, tl.length - 1) * 280).toFixed(1)},${(78 - v * 62).toFixed(1)}`).join(' ');
   $('#certBack').innerHTML = `<div class="cert-in">
     <div><p class="cap">Individual Analysis Report</p><h3>個体分析書<small>ゲーム版</small></h3></div>
@@ -1001,7 +1065,7 @@ function openResult() {
       <div><dt>ガスのバランス</dt><dd>${Math.round(state.gas * 100)}%</dd></div></dl>
     <div style="width:100%;text-align:left"><p class="cap" style="margin-bottom:4px">成長中の安定度の推移</p>
       <svg class="chart" viewBox="0 0 300 92" role="img" aria-label="成長中の安定度の推移グラフ"><rect x="10" y="16" width="280" height="${(62 * CONFIG.cvd.zoneHalf * 2).toFixed(1)}" fill="#F3ECDB"/><line x1="10" y1="78" x2="290" y2="78" stroke="rgba(30,45,69,.3)" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#1E2D45" stroke-width="1.6" stroke-linejoin="round"/><text x="10" y="90" font-size="8" fill="#8A93A1">開始</text><text x="290" y="90" font-size="8" fill="#8A93A1" text-anchor="end">終了</text><text x="290" y="12" font-size="8" fill="#A4874B" text-anchor="end">金色の帯＝安定</text></svg></div>
-    <dl class="rows"><div><dt>カット</dt><dd>${r.cut}</dd></div></dl>
+    <dl class="rows"><div><dt>研磨の精度（6面）</dt><dd><ol class="facets" style="justify-content:flex-end">${cutChips}</ol></dd></div></dl>
     <div style="width:100%;text-align:left"><p class="cap" style="margin-bottom:4px">結晶の特徴</p><ul class="memo">${r.memo.map(x => `<li>${x}</li>`).join('')}</ul></div>
     <p class="cert-foot">${FOOT2}</p></div>`;
   const L = CONFIG.links;
