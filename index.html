@@ -255,6 +255,8 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;line-height
       <div class="field"><label for="petName">お名前（鑑定書に入ります）</label>
         <input class="inp" id="petName" type="text" maxlength="12" placeholder="例：モコ" autocomplete="off" enterkeyhint="done"></div>
       <div class="field"><span class="lab">種類</span><div class="seg" id="segSpecies"></div></div>
+      <div class="field"><span class="lab">つくるダイヤモンドの大きさ</span><div class="seg" id="segSize"></div>
+        <p class="hintbox" id="sizeHint"></p></div>
       <div class="field"><span class="lab">お預かりする素材</span><div class="seg" id="segMaterial"></div>
         <p class="hintbox" id="matHint"></p></div>
       <button class="btn" id="introGo" type="button">工程へ進む</button>
@@ -349,10 +351,7 @@ const CONFIG = {
   hours:  [8, 10, 11, 12, 14, 16, 18],      // ゲーム内の製作時間（カラット別）
   hourSplit: { extract: .25, cvd: .55, cut: .20 },
   grade: {
-    harvestCap: [[.95,6],[.8,5],[.65,4],[.5,3],[.35,2],[.2,1],[0,0]],
-    growth:     [[.97,6],[.9,5],[.8,4],[.65,3],[.5,2],[.3,1],[0,0]],
-    color:   [[.97,'D'],[.93,'E'],[.88,'F'],[.82,'G'],[.75,'H'],[.68,'I'],[.6,'J'],[.53,'K'],[.47,'L'],[.41,'M'],[.36,'N'],[.33,'O'],[.3,'P'],
-              [.27,'Q'],[.24,'R'],[.21,'S'],[.18,'T'],[.15,'U'],[.12,'V'],[.09,'W'],[.06,'X'],[.03,'Y'],[0,'Z']],
+    color:   [[.9,'E'],[.78,'F'],[.64,'G'],[.5,'H'],[.36,'I'],[0,'J']],   // クリア（無色〜ほぼ無色）の中だけ。ZUTTOの品質基準 E〜J
     clarity: [[.98,'FL'],[.94,'IF'],[.89,'VVS1'],[.83,'VVS2'],[.75,'VS1'],[.66,'VS2'],[.55,'SI1'],[.44,'SI2'],[.32,'I1'],[.2,'I2'],[0,'I3']],
     cut:     [[.88,'Excellent'],[.72,'Very Good'],[.55,'Good'],[.38,'Fair'],[0,'Poor']],
     rank:    [[.88,'S'],[.75,'A'],[.6,'B'],[0,'C']],
@@ -408,7 +407,7 @@ const FONT_CAP = 'Cinzel,"Shippori Mincho",serif';
 function rr(g, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 
 /* ---------- 状態 ---------- */
-const state = { name: '', species: 'dog', material: 'hair', metal: 'white', design: null, result: null };
+const state = { name: '', species: 'dog', material: 'hair', size: 3, metal: 'white', design: null, result: null };
 function resetRun() { Object.assign(state, { harvest: 1, purity: 0, growth: 0, gas: 0, stability: 0, tempRate: 0, cut: [], cutScore: 0, timeline: [], layers: [], design: null, result: null }); }
 const petName = () => state.name.trim() || 'うちの子';
 const MAT = () => CONFIG.material[state.material];
@@ -599,7 +598,7 @@ const harvestStage = {
   finish() {
     state.harvest = Math.max(CONFIG.harvest.minAmount, this.amount);
     return { title: '毛が集まりました', stat: `<small>手のひら</small>${state.harvest.toFixed(1)} 杯分`,
-      text: '集めた毛が多いほど、取り出せる炭素が増え、大きなダイヤモンドを育てられます。' };
+      text: '大きなダイヤモンドほど、たくさんの毛が必要です。目安は、両手のひらにのるくらいです。' };
   },
 };
 
@@ -692,7 +691,7 @@ const extractStage = {
   finish() {
     state.purity = this.pur;
     return { title: '炭素を取り出しました', stat: `<small>炭素の純度</small>${Math.round(this.pur * 100)}%`,
-      text: '純度が高いほど、透明で色のないダイヤモンドに近づきます。実際の製作でも、温度の管理がいちばん神経を使う工程のひとつです。' };
+      text: '純度が高いほど、内包物の少ない、澄んだダイヤモンドに近づきます。実際の製作でも、温度の管理がいちばん神経を使う工程のひとつです。' };
   },
 };
 
@@ -763,7 +762,7 @@ const cvdStage = {
     const C = CONFIG.cvd, m = MAT();
     Object.assign(this, { p: [.5, .5, .5], dir: [0, 1, 2].map(() => Math.random() < .5 ? 1 : -1), spd: [0, 1, 2].map(() => rand(C.drift) * m.disturb), flip: [0, 1, 2].map(() => rand(C.flip)),
       zh: C.zoneHalf * m.zone, growth: 0, inT: [0, 0, 0], el: 0, layers: [], tl: [], acc: 0, jit: 0 });
-    const rows = [['温度', '成長の速さ'], ['ガス', '色あい'], ['プラズマ', '透明感']];
+    const rows = [['温度', '成長の速さ'], ['ガス', '混ざり物'], ['プラズマ', '透明感']];
     info.innerHTML = rows.map(([a, b], i) => `<div class="prow"><span class="pl">${a}<small>${b}</small></span><button class="pm" type="button" data-i="${i}" data-d="-1" aria-label="${a}を下げる">−</button><div class="track"><div class="zone" style="left:${(.5 - this.zh) * 100}%;width:${this.zh * 200}%"></div><div class="mark" id="cvM${i}"></div></div><button class="pm" type="button" data-i="${i}" data-d="1" aria-label="${a}を上げる">＋</button></div>`).join('')
       + `<div class="stat"><span>結晶の成長</span><b id="cvG">0</b><span>%</span></div>`;
     info.querySelectorAll('.pm').forEach(b => { b.addEventListener('pointerdown', e => { if (!running) return; const i = +b.dataset.i; this.p[i] = clamp(this.p[i] + (+b.dataset.d) * C.step); e.preventDefault(); });
@@ -780,7 +779,7 @@ const cvdStage = {
     inz.forEach((b, i) => { if (b) this.inT[i] += dt; });
     if (inz[0]) this.growth = Math.min(1, this.growth + dt / this.time * C.growthBoost);
     const want = Math.floor(this.growth * 30), ex = o => clamp((o - this.zh) / (.5 - this.zh)) * .7 + .3;
-    while (this.layers.length < want) this.layers.push({ cloud: inz[2] ? 0 : ex(off[2]), tint: inz[1] ? 0 : ex(off[1]) });
+    while (this.layers.length < want) this.layers.push({ cloud: Math.max(inz[2] ? 0 : ex(off[2]), inz[1] ? 0 : ex(off[1]) * .6), tint: 0 });
     this.acc += dt; if (this.acc >= .5) { this.acc = 0; this.tl.push(1 - clamp(off[2] / .5)); }
     this.jit = inz[2] ? 0 : ex(off[2]);
     for (let i = 0; i < 3; i++) { const mk = $('#cvM' + i); mk.style.left = (this.p[i] * 100) + '%'; mk.classList.toggle('out', !inz[i]); }
@@ -805,7 +804,7 @@ const cvdStage = {
     const el = Math.max(.01, this.el);
     Object.assign(state, { growth: this.growth, tempRate: this.inT[0] / el, gas: this.inT[1] / el, stability: this.inT[2] / el, timeline: this.tl.slice(), layers: this.layers.slice() });
     return { title: '結晶が育ちました', stat: `<small>成長</small>${Math.round(this.growth * 100)}%　<small>安定度</small>${Math.round(state.stability * 100)}%`,
-      text: 'バランスが崩れると、結晶が曇ったり色づいたりします。実際の製作では、この状態を長い時間、人の目で見守り続けます。' };
+      text: 'バランスが崩れると、結晶が曇ったり、小さな内包物ができたりします。実際の製作では、この状態を長い時間、人の目で見守り続けます。' };
   },
 };
 
@@ -895,16 +894,17 @@ const STAGES = [harvestStage, extractStage, seedStage, cvdStage, cutStage];
    評価（GIA の 4C スケール表記）
    ============================================================ */
 function compute() {
-  const G = CONFIG.grade, ci = Math.min(pick(G.harvestCap, state.harvest), pick(G.growth, state.growth));
-  const clarityS = .5 * state.purity + .5 * state.stability, colorS = .5 * state.purity + .5 * state.gas, cutS = state.cutScore;
-  const total = (ci / 6 + clarityS + colorS + cutS) / 4, hours = CONFIG.hours[ci], sp = CONFIG.hourSplit, f1 = v => (Math.round(v * 10) / 10).toString();
+  const G = CONFIG.grade, ci = state.size;
+  const clarityS = .4 * state.purity + .4 * state.stability + .2 * state.gas, colorS = .5 * state.purity + .5 * state.gas, cutS = state.cutScore;
+  const total = (clarityS + cutS) / 2, hours = CONFIG.hours[ci], sp = CONFIG.hourSplit, f1 = v => (Math.round(v * 10) / 10).toString();
   const d = new Date(), z = n => String(n).padStart(2, '0'), abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const no = `ZG-${String(d.getFullYear()).slice(2)}${z(d.getMonth() + 1)}${z(d.getDate())}-${Array.from({ length: 4 }, () => abc[Math.floor(Math.random() * abc.length)]).join('')}`;
   const rank = pick(G.rank, total);
   const open = { S: 'ほぼ非の打ちどころのない仕上がりです。', A: 'とても美しい仕上がりです。', B: '味わいのある、世界にひとつの仕上がりです。', C: '手間をかけた分だけ、愛着のわく一粒になりました。' }[rank];
   const memo = [];
   memo.push(state.stability >= .7 ? '成長中のプラズマは安定し、曇りの少ない澄んだ結晶です。' : '成長中にプラズマが揺らぎ、わずかな曇りが見られます。');
-  memo.push(state.gas >= .7 ? 'ガスのバランスが保たれ、無色に近い色あいです。' : 'ガスの偏りにより、ごく淡い色づきがあります。');
+  memo.push('無色透明（クリア）のダイヤモンドです。カラーは E〜J の範囲に収まります。');
+  memo.push(state.gas >= .7 ? 'ガスのバランスが保たれ、小さな内包物の少ない結晶です。' : 'ガスの偏りにより、ごく小さな内包物がわずかに見られます。');
   if (state.purity < .7) memo.push('炭素の純度がやや低く、小さな内包物の原因になりました。');
   if (state.growth < .65) memo.push('温度が適正から外れた時間があり、結晶の成長がゆっくりでした。');
   state.result = { ci, ct: CONFIG.carats[ci], mm: CONFIG.mm[ci], color: pick(G.color, colorS), clarity: pick(G.clarity, clarityS), cut: pick(G.cut, cutS), rank, hours,
@@ -993,7 +993,7 @@ function openResult() {
     <div><p class="cap">Diamond Grading Report</p><h3>ダイヤモンド鑑定書<small>ゲーム版</small></h3></div>
     <p class="cert-pet"><b>${esc(name)}</b><span>${sp}・素材：${m.label}</span></p>
     <div class="cert-main"><img class="cert-ph" src="${d.img}" alt="">
-      <dl class="c4"><div><dt>CARAT</dt><dd>${r.ct.toFixed(2)}<small>ct</small></dd></div><div><dt>COLOR</dt><dd>${r.color}</dd></div><div><dt>CLARITY</dt><dd>${r.clarity}</dd></div><div><dt>CUT</dt><dd>${r.cut}</dd></div></dl></div>
+      <dl class="c4"><div><dt>CARAT</dt><dd>${r.ct.toFixed(2)}<small>ct</small></dd></div><div><dt>COLOR</dt><dd>${r.color}<small>クリア</small></dd></div><div><dt>CLARITY</dt><dd>${r.clarity}</dd></div><div><dt>CUT</dt><dd>${r.cut}</dd></div></dl></div>
     <dl class="rows"><div><dt>デザイン</dt><dd>${dLab}<br><span style="color:var(--ink2);font-size:12.5px">${esc(d.detail || '')}</span></dd></div>
       <div><dt>総合ランク</dt><dd><b class="rank">${r.rank}</b></dd></div><div><dt>製作時間</dt><dd>${r.hoursText}</dd></div>
       <div><dt>完成日</dt><dd>${r.date}</dd></div><div><dt>証明番号</dt><dd>${r.no}</dd></div></dl>
@@ -1007,6 +1007,7 @@ function openResult() {
       <div><dt>抽出した炭素の純度</dt><dd>${Math.round(state.purity * 100)}%</dd></div>
       <div><dt>結晶の成長</dt><dd>${Math.round(state.growth * 100)}%（成長にかけた時間 ${(Math.round(r.hours * CONFIG.hourSplit.cvd * 10) / 10)}時間）</dd></div>
       <div><dt>プラズマの安定度</dt><dd>${Math.round(state.stability * 100)}%</dd></div>
+      <div><dt>ダイヤモンドの大きさ</dt><dd>${r.ct.toFixed(2)} ct（直径 約${r.mm.toFixed(1)}mm）</dd></div>
       <div><dt>ガスのバランス</dt><dd>${Math.round(state.gas * 100)}%</dd></div></dl>
     <div style="width:100%;text-align:left"><p class="cap" style="margin-bottom:4px">成長中の安定度の推移</p>
       <svg class="chart" viewBox="0 0 300 92" role="img" aria-label="成長中の安定度の推移グラフ"><rect x="10" y="16" width="280" height="${(62 * CONFIG.cvd.zoneHalf * 2).toFixed(1)}" fill="#F3ECDB"/><line x1="10" y1="78" x2="290" y2="78" stroke="rgba(30,45,69,.3)" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#1E2D45" stroke-width="1.6" stroke-linejoin="round"/><text x="10" y="90" font-size="8" fill="#8A93A1">開始</text><text x="290" y="90" font-size="8" fill="#8A93A1" text-anchor="end">終了</text><text x="290" y="12" font-size="8" fill="#A4874B" text-anchor="end">金色の帯＝安定</text></svg></div>
@@ -1046,7 +1047,7 @@ async function makePng() {
   const px = 96, py = 560, ps = 430; g.fillStyle = '#fff'; g.fillRect(px, py, ps, ps); if (photo) g.drawImage(photo, px, py, ps, ps);
   g.strokeStyle = 'rgba(30,45,69,.18)'; g.lineWidth = 1; g.strokeRect(px + .5, py + .5, ps - 1, ps - 1);
   const cxs = 580; g.textAlign = 'left';
-  [['CARAT', r.ct.toFixed(2) + ' ct'], ['COLOR', r.color], ['CLARITY', r.clarity], ['CUT', r.cut]].forEach(([k, v], i) => { const y = py + 30 + i * 108;
+  [['CARAT', r.ct.toFixed(2) + ' ct'], ['COLOR', r.color + '　クリア'], ['CLARITY', r.clarity], ['CUT', r.cut]].forEach(([k, v], i) => { const y = py + 30 + i * 108;
     g.fillStyle = '#A4874B'; g.font = `500 21px ${FONT_CAP}`; g.fillText(k, cxs, y); g.fillStyle = '#1E2D45'; g.font = `600 50px ${FONT_DISP}`; g.fillText(v, cxs, y + 56);
     g.fillStyle = 'rgba(30,45,69,.14)'; g.fillRect(cxs, y + 74, Wc - 96 - cxs, 1); });
   let y = 1060;
@@ -1074,6 +1075,8 @@ function segInit(el, list, key, after) {
   paint();
 }
 segInit($('#segSpecies'), SPECIES, 'species');
+segInit($('#segSize'), CONFIG.carats.map((c, i) => [i, c.toFixed(2) + 'ct']), 'size', () => {
+  $('#sizeHint').textContent = `直径 約${CONFIG.mm[state.size].toFixed(1)}mm。大きさは、ゲームの結果では変わりません。`; });
 segInit($('#segMaterial'), Object.entries(CONFIG.material).map(([k, v]) => [k, v.label]), 'material', () => {
   $('#matHint').textContent = state.material === 'hair' ? '毛は、炭素をいちばん取り出しやすい素材です。ブラッシングで集めるところから体験します。'
     : `${MAT().label}は毛にくらべて炭素を取り出しにくい素材です。採取は省略し、このあとの工程が少し難しくなります。`; });
