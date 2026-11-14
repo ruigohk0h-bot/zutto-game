@@ -128,6 +128,12 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;line-height
   background:rgba(243,241,236,.84);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);border-radius:10px}
 .ov-card{width:100%;max-height:100%;overflow:auto;background:var(--paper);border-radius:10px;padding:22px 20px;
   box-shadow:0 0 0 1px var(--line),0 22px 44px -22px rgba(30,45,69,.4);display:flex;flex-direction:column;gap:12px}
+.ov-body{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px}
+.ov-card{overflow:hidden}
+.strip{display:flex;flex-wrap:wrap;gap:4px}
+.strip li{font-size:11px;line-height:1.5;padding:1px 9px;border-radius:999px;background:var(--track);color:var(--ink3)}
+.strip li.done{background:var(--goldbg);color:var(--ink2)}
+.strip li.now{background:var(--ink);color:#fff}
 .ov-card h3{font-size:21px}
 .ov-card p{color:var(--ink2)}
 .how{background:var(--goldbg);border-radius:6px;padding:10px 12px;font-size:14px;color:var(--ink)!important;line-height:1.6}
@@ -432,8 +438,22 @@ function resizeCanvas() {
 }
 if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(cv.parentElement); else window.addEventListener('resize', resizeCanvas);
 
+/* 工程の切り替わりで見せる説明（数値は出さず、仕組みだけを伝える） */
+const EXPLAIN = {
+  1: { why: 'ダイヤモンドの材料は「炭素」です。毛や骨など、ペットの体にも炭素が含まれていて、それを集めるところから始まります。',
+       real: '毛のうちダイヤモンドになる炭素はごく一部なので、量は多いほど安心です。目安は、両手のひらにのるくらいです。' },
+  2: { why: '集めた素材を高温で加熱し、炭素をガスの状態にして取り出します。取り出した炭素の質が、完成するダイヤモンドの透明度を左右します。',
+       real: '温度が合っていないと、不純物が混ざります。ここで取り出した炭素が、このあと育てる結晶の材料になります。' },
+  3: { why: '結晶は、もとになる「種」の並び方をそっくり引き継いで育ちます。だから、最初にきれいな種結晶を置くことが大切です。',
+       real: '種結晶もダイヤモンドの薄い板です。この上に、炭素が同じ並び方で一層ずつ積み重なっていきます。' },
+  4: { why: 'この育て方を「CVD法」と呼びます。炭素を含むガスをプラズマの状態にして、種結晶の上に炭素を降り積もらせます。',
+       real: 'できあがるのは炭素だけでできた結晶で、天然のダイヤモンドと同じ成分です。実際は、時間をかけて少しずつ育てます。' },
+  5: { why: '育ったばかりの結晶は、まだ原石のような状態です。面を一つずつ磨いて角度を整えると、光が中で反射して輝きます。',
+       real: '研磨の精度は、ダイヤモンドの品質を表す4C（カラット・カラー・クラリティ・カット）のうち「カット」の評価になります。' },
+};
+const strip = (n, nowIdx) => `<ol class="strip" aria-label="工程の流れ">${STEP_NAMES.map((s, i) => `<li class="${i < nowIdx ? 'done' : i === nowIdx ? 'now' : ''}">${s}</li>`).join('')}</ol>`;
 function overlay(html, label, cb) {
-  ov.innerHTML = `<div class="ov-card">${html}<button class="btn" type="button" id="ovBtn">${label}</button></div>`;
+  ov.innerHTML = `<div class="ov-card"><div class="ov-body">${html}</div><button class="btn" type="button" id="ovBtn">${label}</button></div>`;
   ov.hidden = false;
   $('#ovBtn').addEventListener('click', () => { ov.hidden = true; cb(); }, { once: true });
 }
@@ -446,13 +466,16 @@ function startStage(i) {
   cur.setup(); running = false; tLeft = cur.time || 0; drawTimer();
   requestAnimationFrame(resizeCanvas);
   const b = cur.brief();
-  overlay(`<p class="cap">Step ${cur.step} ・ ${esc(cur.cap || STEP_NAMES[cur.step - 1])}</p><h3>${b.title}</h3><p>${b.text}</p>${b.how ? `<p class="how"><b>あそびかた</b>${b.how}</p>` : ''}`,
+  overlay(`<p class="cap">Step ${cur.step} ・ ${esc(cur.cap || STEP_NAMES[cur.step - 1])}</p><h3>${b.title}</h3>${strip(7, cur.step - 1)}<p>${b.text}</p>${b.real ? `<p class="how"><b>本物の工程では</b>${b.real}</p>` : ''}${b.how ? `<p class="how"><b>あそびかた</b>${b.how}</p>` : ''}`,
     b.button || 'はじめる', () => { if (cur.instant) { cur.finish(); nextStage(); } else { running = true; if (cur.begin) cur.begin(); } });
 }
 function endStage() {
   if (!running) return; running = false;
   const o = cur.finish();
-  overlay(`<p class="cap">Step ${cur.step} ・ 完了</p><h3>${o.title}</h3>${o.stat ? `<p class="ov-stat">${o.stat}</p>` : ''}<p>${o.text}</p>`, o.button || '次の工程へ', nextStage);
+  const ex = EXPLAIN[cur.step] || {}, next = STEP_NAMES[cur.step];
+  overlay(`<p class="cap">Step ${cur.step} ・ 完了</p><h3>${o.title}</h3>${o.stat ? `<p class="ov-stat">${o.stat}</p>` : ''}${strip(7, cur.step)}<p>${o.text}</p>`
+    + `${ex.why ? `<p class="how"><b>なぜ必要？</b>${ex.why}</p>` : ''}${ex.real ? `<p class="how"><b>本物の工程では</b>${ex.real}</p>` : ''}`
+    + `${next ? `<p class="fine">つぎは「${next}」です。</p>` : ''}`, o.button || '次の工程へ', nextStage);
 }
 function nextStage() { if (stageIdx < STAGES.length - 1) startStage(stageIdx + 1); else openDesign(); }
 function drawTimer() {
@@ -584,7 +607,8 @@ const harvestStage = {
 const acceptStage = {
   step: 1, title: '素材のお預かり', cap: 'お預かり', time: 0, instant: true,
   brief() { return { title: `${esc(petName())}の${MAT().word}を、大切にお預かりしました`,
-    text: `ダイヤモンドの材料は、素材に含まれる「炭素」です。${MAT().word}は毛にくらべて炭素を取り出しにくいため、このあとの工程が少し難しくなります。`, button: '次の工程へ' }; },
+    text: `ダイヤモンドの材料は、素材に含まれる「炭素」です。${MAT().word}は毛にくらべて炭素を取り出しにくいため、このあとの工程が少し難しくなります。`,
+    real: '素材によって、含まれる炭素の量は違います。実際のご相談では、素材の種類と量を確認したうえで、製作できるかをご案内します。', button: '次の工程へ' }; },
   setup() {}, update() {},
   draw(g, W, H, t) {
     const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#0b121c'); bg.addColorStop(1, '#1a2536'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
