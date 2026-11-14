@@ -1081,7 +1081,7 @@ function compute() {
   state.result = { ci, ct: CONFIG.carats[ci], mm: CONFIG.mm[ci], color: pick(G.color, colorS), clarity: pick(G.clarity, clarityS), cut: pick(G.cut, cutS), rank, hours,
     hoursText: `${hours}時間（抽出${f1(hours * sp.extract)}／成長${f1(hours * sp.cvd)}／研磨${f1(hours * sp.cut)}）`,
     date: `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`, no, memo,
-    msg: `${open}ゲームでは${hours}時間でしたが、本物は職人が${CONFIG.realLeadTime}かけて、一粒ずつ丁寧に育てます。` };
+    msg: open };
 }
 
 /* ============================================================
