@@ -335,7 +335,7 @@ const CONFIG = {
   harvest: { strokeToFill: 4, minAmount: 0.25 },        // 画面幅の何倍なでたら満量か
   extract: { zoneCenter: .62, zoneHalf: .17, heat: .7, cool: .5, damping: 2.2,
              kickEvery: [4.5, 6.5], kick: .22, fullAt: .82 },   // fullAt＝適正に保つべき時間の割合（これで純度100%）
-  cvd:     { zoneHalf: .2, drift: [.03, .055], step: .07, growthBoost: 1.15 },
+  cvd:     { zoneHalf: .28, drift: [.013, .028], step: .1, flip: [2.5, 5], flipProb: .4, growthBoost: 1.2 },
   cut:     { facets: 6, speed: [.7, 1.1], zoneHalf: [.18, .13], goodExtra: .08,
              score: { perfect: 1, good: .72, miss: .3 } },
   carats: [0.10, 0.15, 0.20, 0.30, 0.50, 0.70, 1.00],
@@ -734,10 +734,10 @@ const cvdStage = {
   step: 4, title: '結晶の成長', time: CONFIG.time.cvd,
   brief() { return { title: '炭素を積み重ねて育てる（CVD法）',
     text: '炭素を含むガスをプラズマの状態にすると、炭素が種結晶の上に降り積もり、ダイヤモンドの結晶が少しずつ育ちます。成分も硬さも、天然のダイヤモンドと同じです。',
-    how: `3つの印が少しずつずれていきます。＋と−で金色の範囲に戻してください（${this.time}秒）。` }; },
+    how: `3つの印がゆっくりずれていきます。金色の範囲から出そうになったら、＋と−で戻してください（${this.time}秒）。` }; },
   setup() {
     const C = CONFIG.cvd, m = MAT();
-    Object.assign(this, { p: [.5, .5, .5], dir: [0, 1, 2].map(() => Math.random() < .5 ? 1 : -1), spd: [0, 1, 2].map(() => rand(C.drift) * m.disturb), flip: [0, 1, 2].map(() => rand([1.5, 3.5])),
+    Object.assign(this, { p: [.5, .5, .5], dir: [0, 1, 2].map(() => Math.random() < .5 ? 1 : -1), spd: [0, 1, 2].map(() => rand(C.drift) * m.disturb), flip: [0, 1, 2].map(() => rand(C.flip)),
       zh: C.zoneHalf * m.zone, growth: 0, inT: [0, 0, 0], el: 0, layers: [], tl: [], acc: 0, jit: 0 });
     const rows = [['温度', '成長の速さ'], ['ガス', '色あい'], ['プラズマ', '透明感']];
     info.innerHTML = rows.map(([a, b], i) => `<div class="prow"><span class="pl">${a}<small>${b}</small></span><button class="pm" type="button" data-i="${i}" data-d="-1" aria-label="${a}を下げる">−</button><div class="track"><div class="zone" style="left:${(.5 - this.zh) * 100}%;width:${this.zh * 200}%"></div><div class="mark" id="cvM${i}"></div></div><button class="pm" type="button" data-i="${i}" data-d="1" aria-label="${a}を上げる">＋</button></div>`).join('')
@@ -749,7 +749,7 @@ const cvdStage = {
   update(dt) {
     const C = CONFIG.cvd, m = MAT(); this.el += dt;
     for (let i = 0; i < 3; i++) {
-      this.flip[i] -= dt; if (this.flip[i] <= 0) { if (Math.random() < .6) this.dir[i] *= -1; this.spd[i] = rand(C.drift) * m.disturb; this.flip[i] = rand([1.5, 3.5]); }
+      this.flip[i] -= dt; if (this.flip[i] <= 0) { if (Math.random() < C.flipProb) this.dir[i] *= -1; this.spd[i] = rand(C.drift) * m.disturb; this.flip[i] = rand(C.flip); }
       this.p[i] += this.dir[i] * this.spd[i] * dt; if (this.p[i] <= 0.02) { this.p[i] = .02; this.dir[i] = 1; } if (this.p[i] >= .98) { this.p[i] = .98; this.dir[i] = -1; }
     }
     const off = this.p.map(v => Math.abs(v - .5)), inz = off.map(o => o <= this.zh);
