@@ -1242,7 +1242,7 @@ $('#sheetClose').addEventListener('click', () => { $('#sheet').hidden = true; })
    ============================================================ */
 function segInit(el, list, key, after) {
   const paint = () => { el.innerHTML = list.map(([k, l]) => `<button class="opt" type="button" data-v="${k}" aria-pressed="${state[key] === k}">${l}</button>`).join(''); if (after) after(); };
-  el.addEventListener('click', e => { const b = e.target.closest('.opt'); if (!b) return; state[key] = b.dataset.v; paint(); });
+  el.addEventListener('click', e => { const b = e.target.closest('.opt'); if (!b) return; const hit = list.find(([k]) => String(k) === b.dataset.v); state[key] = hit ? hit[0] : b.dataset.v; paint(); });
   paint();
 }
 segInit($('#segSpecies'), SPECIES, 'species');
