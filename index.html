@@ -43,6 +43,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;line-height
   padding:14px 18px;min-height:52px;width:100%;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .btn:disabled{background:#C9CCD2;cursor:default}
 .btn.gold{background:linear-gradient(#B2955A,#977A41)}
+.btn.sm{min-height:44px;font-size:14px;padding:10px 14px}
 .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(30,45,69,.3)}
 .btn.hold.on{background:linear-gradient(#D9793A,#B5502A)}
 
@@ -177,7 +178,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;line-height
 /* ---- 結果 ---- */
 .r-hero{display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center}
 .r-hero h2{font-size:21px}
-.nw{display:inline-block;max-width:100%}
+.nw{display:inline-block;max-width:100%;overflow-wrap:anywhere}
 .r-photo{width:100%;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 30px 50px -34px rgba(30,45,69,.5)}
 .r-photo img{width:100%;aspect-ratio:1;object-fit:cover}
 .r-photo figcaption{font-size:13px;padding:10px 12px;color:var(--ink);box-shadow:inset 0 1px 0 var(--line)}
@@ -252,8 +253,11 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:600;text-wrap:balance;line-height
   <section class="screen scroll" id="s-intro" hidden>
     <div class="form">
       <div><p class="cap">Your Pet</p><h2>うちの子について教えてください</h2></div>
-      <div class="field"><label for="petName">お名前（鑑定書に入ります）</label>
-        <input class="inp" id="petName" type="text" maxlength="12" placeholder="例：モコ" autocomplete="off" enterkeyhint="done"></div>
+      <div class="field"><label for="petName">うちの子のお名前（鑑定書に入ります）</label>
+        <input class="inp" id="petName" type="text" maxlength="10" placeholder="例：モコ" autocomplete="off" enterkeyhint="done">
+        <input class="inp" id="petName2" type="text" maxlength="10" placeholder="2頭目のお名前" autocomplete="off" enterkeyhint="done" hidden>
+        <input class="inp" id="petName3" type="text" maxlength="10" placeholder="3頭目のお名前" autocomplete="off" enterkeyhint="done" hidden>
+        <button class="btn ghost sm" id="addPet" type="button">＋ もう1頭、名前を入れる（3頭まで）</button></div>
       <div class="field"><span class="lab">種類</span><div class="seg" id="segSpecies"></div></div>
       <div class="field"><span class="lab">つくるダイヤモンドの大きさ</span><div class="seg" id="segSize"></div>
         <p class="hintbox" id="sizeHint"></p></div>
@@ -1096,7 +1100,7 @@ async function makePng() {
   g.fillStyle = '#A4874B'; g.font = `500 24px ${FONT_CAP}`; try { g.letterSpacing = '6px'; } catch (_) {} g.fillText('DIAMOND GRADING REPORT', Wc / 2, 268); try { g.letterSpacing = '0px'; } catch (_) {}
   g.fillStyle = '#1E2D45'; g.font = `600 48px ${FONT_DISP}`; g.fillText('ダイヤモンド鑑定書', Wc / 2, 334);
   g.fillStyle = '#5B6779'; g.font = `500 22px ${FONT_BODY}`; g.fillText('ゲーム版', Wc / 2, 370);
-  g.fillStyle = '#1E2D45'; g.font = `600 60px ${FONT_DISP}`; g.fillText(fitText(g, name, Wc - 220), Wc / 2, 470);
+  let nf = 60; g.fillStyle = '#1E2D45'; g.font = `600 ${nf}px ${FONT_DISP}`; while (nf > 30 && g.measureText(name).width > Wc - 220) { nf -= 2; g.font = `600 ${nf}px ${FONT_DISP}`; } g.fillText(fitText(g, name, Wc - 220), Wc / 2, 470);
   g.fillStyle = '#5B6779'; g.font = `500 24px ${FONT_BODY}`; g.fillText(sub, Wc / 2, 512);
   const px = 96, py = 560, ps = 430; g.fillStyle = '#fff'; g.fillRect(px, py, ps, ps); if (photo) g.drawImage(photo, px, py, ps, ps);
   g.strokeStyle = 'rgba(30,45,69,.18)'; g.lineWidth = 1; g.strokeRect(px + .5, py + .5, ps - 1, ps - 1);
@@ -1135,8 +1139,13 @@ segInit($('#segMaterial'), Object.entries(CONFIG.material).map(([k, v]) => [k, v
   $('#matHint').textContent = state.material === 'hair' ? '毛は、炭素をいちばん取り出しやすい素材です。ブラッシングで集めるところから体験します。'
     : `${MAT().label}は毛にくらべて炭素を取り出しにくい素材です。採取は省略し、このあとの工程が少し難しくなります。`; });
 $('#startBtn').addEventListener('click', () => show('s-intro'));
-$('#introGo').addEventListener('click', () => { state.name = $('#petName').value; resetRun(); startStage(0); });
-$('#petName').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+$('#introGo').addEventListener('click', () => { state.name = ['#petName', '#petName2', '#petName3'].map(id => $(id).value.trim()).filter(Boolean).join('・'); resetRun(); startStage(0); });
+['#petName', '#petName2', '#petName3'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); }));
+$('#addPet').addEventListener('click', () => {
+  const next = ['#petName2', '#petName3'].map(id => $(id)).find(el => el.hidden);
+  if (next) { next.hidden = false; next.focus(); }
+  if (!['#petName2', '#petName3'].some(id => $(id).hidden)) $('#addPet').hidden = true;
+});
 $('#again').addEventListener('click', () => { cur = null; show('s-intro'); });
 requestAnimationFrame(loop);
 })();
