@@ -325,7 +325,7 @@ const CONFIG = {
     line:      'https://lin.ee/6tNAPNH',
   },
   realLeadTime: '約1ヶ月半〜3ヶ月',          // 鑑定書の「飼い主への一言」に出る実際の製作期間の目安
-  time: { harvest: 12, extract: 20, cvd: 20, cut: 15 },   // 各ステージの秒数
+  time: { harvest: 12, extract: 10, cvd: 10, cut: 15 },   // 各ステージの秒数
   material: {                               // 素材ごとの難易度補正
     hair:  { label: '毛', word: '毛',   zone: 1.0, disturb: 1.0, purityRate: 1.0 },
     bone:  { label: '骨', word: 'お骨', zone: 0.7, disturb: 1.5, purityRate: 0.85 },
@@ -334,8 +334,8 @@ const CONFIG = {
   },
   harvest: { strokeToFill: 4, minAmount: 0.25 },        // 画面幅の何倍なでたら満量か
   extract: { zoneCenter: .62, zoneHalf: .17, heat: .7, cool: .5, damping: 2.2,
-             kickEvery: [4.5, 6.5], kick: .22, fullAt: .82 },   // fullAt＝適正に保つべき時間の割合（これで純度100%）
-  cvd:     { zoneHalf: .28, drift: [.013, .028], step: .1, flip: [2.5, 5], flipProb: .4, growthBoost: 1.2 },
+             kickEvery: [3, 5], kick: .22, fullAt: .6 },   // fullAt＝適正に保つべき時間の割合（これで純度100%）
+  cvd:     { zoneHalf: .24, drift: [.022, .042], step: .09, flip: [2, 4], flipProb: .5, growthBoost: 1.15 },
   cut:     { facets: 6, speed: [.7, 1.1], zoneHalf: [.18, .13], goodExtra: .08,
              score: { perfect: 1, good: .72, miss: .3 } },
   carats: [0.10, 0.15, 0.20, 0.30, 0.50, 0.70, 1.00],
